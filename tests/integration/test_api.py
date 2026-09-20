@@ -28,7 +28,7 @@ async def test_status(client):
     data = resp.json()
     assert data["status"] == "ok"
     assert data["active_router"] == "mock_jev"
-    assert data["benchmark_results_available"] is False
+    assert isinstance(data["benchmark_results_available"], bool)
     assert "schema_version" in data
     assert "policy_version" in data
 

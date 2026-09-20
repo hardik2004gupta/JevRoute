@@ -1,0 +1,52 @@
+experiment:
+  name: e2e-v1
+  dataset: benchmark_fixture
+  split: test
+  concurrency: 8
+  max_examples: 10
+
+decision_schema:
+  version: "1.0"
+
+# End-to-End experiment: control plane + simulated generation.
+# Measures the "control-plane tax" = control cost / (control cost + generation cost).
+# Measures the "latency share"    = control latency / total latency.
+#
+# For each example, the e2e runner:
+#   1. Runs the control plane (normal benchmark run)
+#   2. Applies policy (shared PolicyEngine)
+#   3. Simulates generation cost (configurable model + token estimate)
+#   4. Computes total_cost = control_cost + generation_cost
+#   5. Computes cp_tax = control_cost / total_cost
+#
+# NOTE: Generation is SIMULATED. This experiment does not make real LLM generation calls
+# unless generation.real_calls = true and a generation model is configured.
+e2e:
+  # Simulated generation parameters (realistic GPT-4o-mini costs for a support reply)
+  generation:
+    real_calls: false
+    simulated_input_tokens: 400
+    simulated_output_tokens: 180
+    simulated_input_price_per_1k: 0.00015
+    simulated_output_price_per_1k: 0.0006
+    simulated_latency_ms: 1200
+
+routers:
+  - rules
+  - mock_jev
+  # - llm_single
+  # - llm_parallel
+  # - jev
+
+metrics:
+  latency: true
+  token_usage: true
+  cost: true
+  accuracy: true
+  f1: true
+  control_plane_tax: true
+  latency_share: true
+
+retry:
+  max_attempts: 2
+  backoff_ms: 250

@@ -40,13 +40,18 @@ class Settings(BaseSettings):
 
     # Provider credentials — optional, not required for mock/rules-only runs
     jev_api_key: str | None = None
+    jev_base_url: str = "https://api.jev.ai"
+    jev_model: str | None = None
+    jev_input_price: float | None = None
+    jev_output_price: float | None = None
+    jev_timeout_s: float = 10.0
+    jev_schema_version: str = "jev-support-v1"
+
     llm_api_key: str | None = None
     llm_base_url: str = "https://api.openai.com/v1"
     model_name: str | None = None
     model_input_price: float | None = None
     model_output_price: float | None = None
-    jev_input_price: float | None = None
-    jev_output_price: float | None = None
 
 
 @lru_cache

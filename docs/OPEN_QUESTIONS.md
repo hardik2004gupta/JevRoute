@@ -74,6 +74,32 @@ Genuine ambiguities discovered between the specification files or the current re
 
 ---
 
+---
+
+## OQ-001 Resolution (Phase 3)
+
+**Resolution:** Jev API unknown → minimal adapter boundary.
+
+`HttpxJevClient` assumes `POST {base_url}/v1/decide` with a JSON payload containing the structured application state. This assumption is documented in `src/jevroute/routers/jev_client.py`. The `JevClient` Protocol isolates all transport logic: if the real API uses a different endpoint, auth scheme, or SDK, only `HttpxJevClient` changes. The benchmark/evaluation code is unaffected.
+
+`FakeJevClient` enables all unit tests and CI without network access or credentials. All 20 Jev unit tests pass with no network calls.
+
+**Status:** Documented assumption. Update `HttpxJevClient` when real Jev API documentation is available.
+
+---
+
+## OQ-002 Resolution (Phase 3)
+
+**Resolution:** Jev pricing model unknown → per-token configurable, default 0.0.
+
+`JevRouter` accepts `model_input_price_per_1k` and `model_output_price_per_1k` constructor parameters (also settable via `JEV_INPUT_PRICE` and `JEV_OUTPUT_PRICE` env vars). Both default to `0.0`, so all cost accounting is non-distorting when prices are unknown. The formula is documented as an assumption in `jev_client.py`: "per-token pricing assumed — update if Jev charges per-decision."
+
+If Jev is per-decision, set both price variables to `0.0` and add a separate `jev_decision_price` variable to represent the flat fee.
+
+**Status:** Documented assumption. Confirm and update `.env.example` when real Jev pricing is available.
+
+---
+
 ## No Further Ambiguities Identified
 
 The two specification files are broadly consistent. The five items above represent genuine gaps where implementation decisions are required but not fully specified by the current documents.

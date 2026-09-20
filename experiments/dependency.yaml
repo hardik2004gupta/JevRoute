@@ -1,0 +1,54 @@
+experiment:
+  name: dependency-v1
+  dataset: benchmark_fixture
+  split: test
+  concurrency: 8
+  max_examples: 10
+
+decision_schema:
+  version: "1.0"
+
+# Dependency-aware experiment: two workload families.
+# Measures whether treating dependent decisions as independent
+# (as LLMParallelRouter does by default) affects quality.
+#
+# INDEPENDENT FAMILY: decisions that do not structurally depend on each other.
+#   category:           determines routing destination; independent of severity
+#   hallucination_risk: estimated from draft quality; independent of business category
+#   tone_risk:          estimated from draft language; independent of priority
+#
+# DEPENDENT FAMILY: decisions where upstream results should inform downstream.
+#   severity:         customer tier + product + ticket content → urgency classification
+#     ↓
+#   policy_violation: depends on severity (P1 with policy flag is higher risk)
+#     ↓
+#   action:           depends on severity + policy_violation + risk scores
+dependency:
+  families:
+    independent:
+      decisions: ["category", "hallucination_risk", "tone_risk"]
+      rationale: "Category classification and risk scores are semantically independent decisions"
+
+    dependent:
+      decisions: ["severity", "policy_violation", "action"]
+      chain: ["severity", "policy_violation", "action"]
+      rationale: "Action depends on severity and policy_violation; policy_violation risk is severity-contextual"
+
+routers:
+  - rules
+  - mock_jev
+  # - llm_single
+  # - llm_parallel
+  # - jev
+
+metrics:
+  latency: true
+  token_usage: true
+  cost: true
+  accuracy: true
+  f1: true
+  calibration: false
+
+retry:
+  max_attempts: 2
+  backoff_ms: 250
