@@ -1,0 +1,111 @@
+{
+  "_schema": "jevroute-result-status-v1",
+  "_generated": "2026-09-20T00:00:00Z",
+  "_note": "Valid statuses: NOT_RUN | PARTIAL | COMPLETE | BLOCKED | INVALIDATED",
+  "_commit": "2747c97",
+  "_dataset_note": "All current results use the 10-example CI fixture (datasets/test/jevroute_support_v01.jsonl). This is NOT the final 1000-2000 example research dataset.",
+  "experiments": [
+    {
+      "experiment_id": "baseline-v1",
+      "status": "PARTIAL",
+      "status_reason": "Only rules and mock_jev executed. LLMSingleRouter, LLMParallelRouter, and real JevRouter require external credentials not present in CI environment.",
+      "dataset": "benchmark_fixture",
+      "dataset_version": "0.1.0-synthetic",
+      "sample_size": 10,
+      "routers_run": ["rules", "mock_jev"],
+      "routers_missing": ["llm_single", "llm_parallel", "jev"],
+      "last_run_commit": "e9b9a91",
+      "result_paths": {
+        "raw_rules": "results/raw/baseline-v1/rules.jsonl",
+        "raw_mock_jev": "results/raw/baseline-v1/mock_jev.jsonl",
+        "aggregate": "results/aggregate/baseline-v1.csv",
+        "metadata": "results/metadata/baseline-v1.json"
+      },
+      "blockers": [
+        "LLM_API_KEY + MODEL_NAME required for llm_single and llm_parallel",
+        "JEV_API_KEY + confirmed API interface required for jev (see OQ-001)"
+      ]
+    },
+    {
+      "experiment_id": "scaling-v1",
+      "status": "NOT_RUN",
+      "status_reason": "Experiment config exists. Requires real LLM and/or Jev credentials for meaningful results.",
+      "dataset": "benchmark_fixture",
+      "dataset_version": "0.1.0-synthetic",
+      "sample_size": null,
+      "routers_run": [],
+      "routers_missing": ["rules", "llm_single", "llm_parallel", "jev"],
+      "blockers": [
+        "External credentials required",
+        "10-example fixture insufficient for scaling analysis"
+      ]
+    },
+    {
+      "experiment_id": "fastpath-v1",
+      "status": "NOT_RUN",
+      "status_reason": "Experiment config exists. FastGate implementation is complete. Comparison against real Jev required for meaningful results.",
+      "dataset": "benchmark_fixture",
+      "dataset_version": "0.1.0-synthetic",
+      "sample_size": null,
+      "routers_run": [],
+      "routers_missing": ["mock_jev", "jev"],
+      "blockers": [
+        "Real Jev required for bypass comparison to be meaningful",
+        "mock_jev has no realistic latency characteristics"
+      ]
+    },
+    {
+      "experiment_id": "context-v1",
+      "status": "NOT_RUN",
+      "status_reason": "Experiment config exists. Requires real LLM/Jev for quality and token comparisons.",
+      "dataset": "benchmark_fixture",
+      "dataset_version": "0.1.0-synthetic",
+      "sample_size": null,
+      "routers_run": [],
+      "routers_missing": ["rules", "llm_single", "jev"],
+      "blockers": ["External credentials required"]
+    },
+    {
+      "experiment_id": "dependency-v1",
+      "status": "NOT_RUN",
+      "status_reason": "Experiment config exists. Dependency classification requires real model execution.",
+      "dataset": "benchmark_fixture",
+      "dataset_version": "0.1.0-synthetic",
+      "sample_size": null,
+      "routers_run": [],
+      "routers_missing": ["rules", "llm_single", "jev"],
+      "blockers": ["External credentials required"]
+    },
+    {
+      "experiment_id": "e2e-v1",
+      "status": "NOT_RUN",
+      "status_reason": "Experiment config and SimulatedGeneration implementation exist. All generation costs are SIMULATED (not from a real provider). Real provider required for actual economics measurement.",
+      "dataset": "benchmark_fixture",
+      "dataset_version": "0.1.0-synthetic",
+      "sample_size": null,
+      "routers_run": [],
+      "routers_missing": ["rules", "llm_single", "jev"],
+      "generation_mode": "SIMULATED",
+      "blockers": [
+        "External credentials required",
+        "Real generation provider required for actual control-plane tax measurement"
+      ]
+    }
+  ],
+  "dataset_status": {
+    "ci_fixture": {
+      "path": "datasets/test/jevroute_support_v01.jsonl",
+      "examples": 10,
+      "status": "PRESENT",
+      "purpose": "CI validation only — not the research benchmark dataset"
+    },
+    "research_dataset": {
+      "path": null,
+      "examples": null,
+      "status": "NOT_YET_AVAILABLE",
+      "purpose": "1000-2000 example labeled dataset required for research conclusions (OQ-003)"
+    }
+  },
+  "mock_data_warning": "Results from mock_jev (MockJevRouter) are synthetic and must not be interpreted as Jev system performance. They exist to validate the benchmark pipeline only.",
+  "simulated_data_warning": "e2e-v1 uses SimulatedGeneration for downstream generation costs. These are not real provider measurements."
+}

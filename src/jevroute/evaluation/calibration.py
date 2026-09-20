@@ -55,16 +55,21 @@ def compute_calibration_metrics(records: "list[BenchmarkRecord]") -> dict[str, A
     # For Phase 2: only MockJevRouter provides these; LLM/Rules do not.
     # We look at the prediction field for explicit probability fields if present.
 
+    # Calibration requires native probability estimates from the router.
+    # We use policy_violation_probability (from ConfidenceOutput) against
+    # ground_truth.policy_violation as the binary outcome.
+    # Routers that do not produce policy_violation_probability (Rules, LLM Single,
+    # LLM Parallel) will have no eligible records, returning brier_score=None.
+    # This field is stored in the prediction dict only when the router provides it.
     brier_samples: list[tuple[float, int]] = []
 
     for r in records:
         if not r.schema_valid or not r.prediction or not r.ground_truth:
             continue
-        # hallucination_risk as a probability prediction
-        pred_hr = r.prediction.get("hallucination_risk")
+        pred_pvp = r.prediction.get("policy_violation_probability")
         true_pv = int(r.ground_truth.get("policy_violation", False))
-        if pred_hr is not None:
-            brier_samples.append((float(pred_hr), true_pv))
+        if pred_pvp is not None:
+            brier_samples.append((float(pred_pvp), true_pv))
 
     if not brier_samples:
         return {

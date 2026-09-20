@@ -181,16 +181,25 @@ def test_throughput_zero_wall_clock():
 # ---------------------------------------------------------------------------
 
 def test_calibration_brier_score_perfect():
-    # Perfect calibration: predicted risk 0.0 for non-policy, 1.0 for policy
+    # Perfect calibration: policy_violation_probability=0.0 for non-violation examples
     r_safe = _record(
         prediction={"severity": "P2", "category": "Billing", "policy_violation": False,
-                    "hallucination_risk": 0.0, "tone_risk": 0.01, "action": "SEND"},
+                    "hallucination_risk": 0.0, "tone_risk": 0.01, "action": "SEND",
+                    "policy_violation_probability": 0.0},
         ground_truth={"severity": "P2", "category": "Billing", "policy_violation": False,
                       "hallucination_risk": 0.0, "tone_risk": 0.01, "action": "SEND"},
     )
     cal = compute_calibration_metrics([r_safe])
     # brier_score = (0.0 - 0)^2 = 0.0
     assert cal["brier_score"] == 0.0
+
+
+def test_calibration_null_without_probability_estimates():
+    """Routers that do not produce policy_violation_probability return None for calibration."""
+    r = _record()  # default prediction has no policy_violation_probability
+    cal = compute_calibration_metrics([r])
+    assert cal["brier_score"] is None
+    assert cal["ece"] is None
 
 
 def test_calibration_empty_returns_null():
@@ -223,3 +232,43 @@ def test_evaluation_does_not_mutate_prediction():
     compute_calibration_metrics([record])
 
     assert record.prediction == pred_snapshot, "Evaluation mutated prediction dict!"
+
+
+# ---------------------------------------------------------------------------
+# Phase 5: missed_policy_violation_rate definition regression
+# ---------------------------------------------------------------------------
+
+def test_missed_policy_violation_rate_uses_final_action():
+    """missed_policy_violation_rate = (GT pv=True AND final_action=SEND) / total GT pv=True.
+
+    This tests the correct routing-outcome definition (not the detection definition).
+    A violation that was held/escalated is NOT a miss even if the router didn't flag pv=True.
+    A violation that was sent IS a miss regardless of pv flag in prediction.
+    """
+    # GT pv=True, final_action=SEND → miss
+    miss = _record(
+        final_action="SEND",
+        ground_truth={"severity": "P2", "category": "Billing", "policy_violation": True,
+                      "hallucination_risk": 0.0, "tone_risk": 0.0, "action": "SEND"},
+    )
+    # GT pv=True, final_action=HOLD → NOT a miss (correctly held)
+    held = _record(
+        final_action="HOLD",
+        ground_truth={"severity": "P2", "category": "Billing", "policy_violation": True,
+                      "hallucination_risk": 0.0, "tone_risk": 0.0, "action": "HOLD"},
+    )
+    # GT pv=False, final_action=SEND → not in denominator
+    no_pv = _record(final_action="SEND")
+
+    q = compute_quality_metrics([miss, held, no_pv])
+    # 1 miss out of 2 GT pv=True examples = 0.5
+    assert q["missed_policy_violation_rate"] == 0.5, (
+        f"Expected 0.5, got {q['missed_policy_violation_rate']}"
+    )
+
+
+def test_missed_policy_violation_rate_none_when_no_violations():
+    """When no GT examples have policy_violation=True, rate must be None (not 0.0 or NaN)."""
+    records = [_record(final_action="SEND")] * 5
+    q = compute_quality_metrics(records)
+    assert q["missed_policy_violation_rate"] is None

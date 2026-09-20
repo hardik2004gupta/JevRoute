@@ -92,11 +92,13 @@ class ResultRecorder:
         if path.exists() and not self._force:
             raise FileExistsError(
                 f"Result file already exists: {path}. "
-                "Use force=True to overwrite (this will append to the existing file)."
+                "Use force=True to truncate and overwrite the existing file."
             )
 
         key = f"{experiment_id}/{router}"
-        self._handles[key] = path.open("a", encoding="utf-8")
+        # "w" truncates when force=True; "a" appends for a fresh file (path.exists() is False)
+        mode = "w" if (path.exists() and self._force) else "a"
+        self._handles[key] = path.open(mode, encoding="utf-8")
         logger.info("Recording to %s", path)
 
     def write(self, experiment_id: str, router: str, record: BenchmarkRecord) -> None:

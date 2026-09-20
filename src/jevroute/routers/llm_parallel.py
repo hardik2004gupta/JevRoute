@@ -241,6 +241,7 @@ class LLMParallelRouter:
         # Aggregate tokens from all successful calls
         total_input = 0
         total_output = 0
+        total_retries = 0
         parsed: dict[str, object] = {}
         errors: dict[str, str] = {}
 
@@ -249,9 +250,10 @@ class LLMParallelRouter:
             if isinstance(res, BaseException):
                 errors[dim] = str(res)
                 continue
-            response, _ = res
+            response, attempt = res
             total_input += response.input_tokens or 0
             total_output += response.output_tokens or 0
+            total_retries += attempt
 
             try:
                 raw = extract_json_object(response.content)
@@ -299,4 +301,5 @@ class LLMParallelRouter:
             input_tokens=total_input or None,
             output_tokens=total_output or None,
             estimated_cost_usd=cost,
+            retry_count=total_retries,
         )

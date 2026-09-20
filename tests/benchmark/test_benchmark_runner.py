@@ -263,3 +263,133 @@ async def test_llm_router_with_mocked_provider_full_run(tmp_path):
     assert aggregate["total_cost_usd"] > 0
     assert aggregate["input_tokens"] is not None
     assert aggregate["schema_failure_rate"] == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Phase 5 regression tests — benchmark integrity invariants
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_policy_engine_identity_across_routers(tmp_path):
+    """Invariant 2: the same PolicyEngine instance must be used for both routers.
+
+    A shared policy engine is constructed once and passed to the runner.
+    If the runner constructed its own engine internally, results would diverge
+    when the shared policy instance has state or non-default configuration.
+    """
+    from jevroute.policy.engine import PolicyEngine
+
+    # Use a non-default hallucination threshold to distinguish from the default engine
+    shared_engine = PolicyEngine(hallucination_threshold=0.999)  # effectively never triggers
+
+    cfg = _minimal_config()
+    loader = WorkloadLoader(DATASETS_DIR)
+    examples = loader.load(cfg.experiment.dataset, cfg.experiment.split)
+
+    runner1 = BenchmarkRunner(
+        config=cfg, results_dir=tmp_path / "run1", datasets_dir=DATASETS_DIR,
+        policy_engine=shared_engine, force=True,
+    )
+    runner2 = BenchmarkRunner(
+        config=cfg, results_dir=tmp_path / "run2", datasets_dir=DATASETS_DIR,
+        policy_engine=shared_engine, force=True,
+    )
+
+    agg1 = await runner1.run(router=RulesRouter(), router_name=RULES_NAME,
+                              router_version=RULES_VERSION, examples=examples)
+    agg2 = await runner2.run(router=MockJevRouter(), router_name=MOCK_NAME,
+                              router_version=MOCK_VERSION, examples=examples)
+
+    # Both runners must have used the same policy engine — verify object identity
+    assert runner1._policy_engine is shared_engine
+    assert runner2._policy_engine is shared_engine
+    # Both should have non-zero results (engines processed examples)
+    assert agg1["examples"] == len(examples)
+    assert agg2["examples"] == len(examples)
+
+
+@pytest.mark.asyncio
+async def test_failed_observations_retained_in_raw_records(tmp_path):
+    """Invariant 5 + Rule 9: failed router calls must be retained, never dropped.
+
+    A router that always raises an error must still produce one raw record per example,
+    with error_type populated.
+    """
+    from jevroute.models.state import ApplicationState
+    from jevroute.routers.llm_provider import RouterError
+
+    class AlwaysFailRouter:
+        """Router that always raises a TIMEOUT error."""
+        async def decide(self, state: ApplicationState):
+            raise RouterError("TIMEOUT", "simulated timeout for test")
+
+    cfg = _minimal_config()
+    runner = BenchmarkRunner(
+        config=cfg, results_dir=tmp_path, datasets_dir=DATASETS_DIR, force=True
+    )
+    loader = WorkloadLoader(DATASETS_DIR)
+    examples = loader.load(cfg.experiment.dataset, cfg.experiment.split)
+
+    aggregate = await runner.run(
+        router=AlwaysFailRouter(),
+        router_name="always_fail",
+        router_version="test-1.0",
+        examples=examples,
+    )
+
+    raw_path = tmp_path / "raw" / cfg.experiment.name / "always_fail.jsonl"
+    records = [json.loads(l) for l in raw_path.read_text().splitlines() if l.strip()]
+
+    # Every example must produce a raw record
+    assert len(records) == len(examples)
+    # Every record must have error_type populated
+    for r in records:
+        assert r["error_type"] == "TIMEOUT", f"Expected TIMEOUT, got {r.get('error_type')}"
+        assert r["prediction"] is None
+    # Schema failure rate must reflect 100% failures
+    assert aggregate["schema_failure_rate"] == 1.0
+
+
+@pytest.mark.asyncio
+async def test_retry_count_surfaced_in_raw_records(tmp_path):
+    """Invariant: retry_count must be > 0 in raw records when a router retried.
+
+    Uses FakeModelClient configured to fail once then succeed.
+    """
+    from jevroute.routers.llm_provider import FakeModelClient, ModelResponse
+    from jevroute.routers.llm_provider import RouterError as RE
+    from jevroute.routers.llm_single import LLMSingleRouter, ROUTER_NAME, ROUTER_VERSION
+
+    valid_content = (
+        '{"severity":"P2","category":"Billing","policy_violation":false,'
+        '"hallucination_risk":0.05,"tone_risk":0.02,"action":"SEND"}'
+    )
+    valid_resp = ModelResponse(content=valid_content, input_tokens=200, output_tokens=40, model="fake")
+    # First response is a rate limit error, second is success
+    client = FakeModelClient(
+        responses=[RE("RATE_LIMIT", "simulated rate limit"), valid_resp],
+        default_response=valid_resp,
+    )
+    router = LLMSingleRouter(client=client)
+
+    cfg = _minimal_config()
+    runner = BenchmarkRunner(
+        config=cfg, results_dir=tmp_path, datasets_dir=DATASETS_DIR, force=True
+    )
+    loader = WorkloadLoader(DATASETS_DIR)
+    # Use just 1 example to exercise the retry path predictably
+    examples = loader.load(cfg.experiment.dataset, cfg.experiment.split)[:1]
+
+    await runner.run(
+        router=router,
+        router_name=ROUTER_NAME,
+        router_version=ROUTER_VERSION,
+        examples=examples,
+    )
+
+    raw_path = tmp_path / "raw" / cfg.experiment.name / f"{ROUTER_NAME}.jsonl"
+    records = [json.loads(l) for l in raw_path.read_text().splitlines() if l.strip()]
+    assert len(records) == 1
+    assert records[0]["retry_count"] == 1, (
+        f"Expected retry_count=1 after one rate-limit retry, got {records[0]['retry_count']}"
+    )

@@ -171,7 +171,7 @@ class JevRouter:
 
             latency_ms = (perf_counter() - t_start) * 1000
             result = _normalize(resp, total_input_tokens, total_output_tokens, cost)
-            result = result.model_copy(update={"latency_ms": round(latency_ms, 3)})
+            result = result.model_copy(update={"latency_ms": round(latency_ms, 3), "retry_count": attempt})
             logger.debug(
                 "Jev decision complete | router_version=%s latency_ms=%.1f tokens_in=%d tokens_out=%d cost=%.6f",
                 ROUTER_VERSION, latency_ms, total_input_tokens, total_output_tokens, cost,

@@ -224,6 +224,7 @@ class BenchmarkRunner:
         output_tokens: int | None = None
         cost: float | None = None
         schema_valid = False
+        retry_count = 0
 
         try:
             t_router_start = perf_counter()
@@ -235,6 +236,7 @@ class BenchmarkRunner:
             output_tokens = result.output_tokens
             cost = result.estimated_cost_usd
             schema_valid = result.schema_valid
+            retry_count = result.retry_count
 
             prediction_dict = {
                 "severity": result.severity.value,
@@ -291,7 +293,7 @@ class BenchmarkRunner:
             output_tokens=output_tokens,
             estimated_cost_usd=cost,
             schema_valid=schema_valid,
-            retry_count=0,
+            retry_count=retry_count,
             error_type=error_type,
             error_message=error_message,
             prediction=prediction_dict,

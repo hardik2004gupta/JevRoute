@@ -85,12 +85,14 @@ def compute_quality_metrics(records: "list[BenchmarkRecord]") -> dict[str, Any]:
     over_esc = sum(1 for p, t in zip(y_pred, y_true) if p == "ESCALATE" and t in ("SEND", "HOLD"))
     over_escalation_rate = over_esc / n if n > 0 else None
 
-    # missed policy violation rate: ground truth policy_violation=True but predicted policy_violation=False
-    pv_true = [r for r in valid_records if r.ground_truth and r.ground_truth.get("policy_violation")]  # type: ignore[union-attr]
-    pv_missed = sum(
-        1 for r in pv_true
-        if r.prediction and not r.prediction.get("policy_violation")
-    )
+    # missed policy violation rate: ground truth policy_violation=True but final action=SEND
+    # A "miss" is when a router routes to SEND despite a known policy violation.
+    # Denominator: all examples where ground_truth.policy_violation=True.
+    pv_true = [
+        r for r in valid_records
+        if r.ground_truth and r.ground_truth.get("policy_violation") and r.final_action is not None
+    ]  # type: ignore[union-attr]
+    pv_missed = sum(1 for r in pv_true if r.final_action == "SEND")
     missed_policy_violation_rate = pv_missed / len(pv_true) if pv_true else None
 
     return {
