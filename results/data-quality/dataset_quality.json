@@ -1,0 +1,81 @@
+{
+  "_schema": "jevroute-data-quality-v1",
+  "_generated": "2026-09-20T00:00:00Z",
+  "_commit": "e480a5b",
+  "_note": "Dataset quality gate results for CI fixture. Research dataset quality gate cannot be run — dataset does not exist.",
+
+  "datasets_evaluated": [
+    {
+      "dataset_id": "ci_fixture_test",
+      "path": "datasets/test/benchmark_fixture.jsonl",
+      "hash": "32d80883d67060ffa888c8251a37b972ecff10b08e6b09a65fcd94b482ad21d6",
+      "example_count": 10,
+      "split": "test",
+
+      "required_fields_check": {
+        "status": "PASS",
+        "fields_checked": ["example_id", "severity", "category", "policy_violation", "hallucination_risk", "tone_risk", "action", "customer_tier", "product", "region", "ticket_subject", "ticket_body", "draft_reply"],
+        "missing_fields": []
+      },
+      "valid_enums_check": {
+        "status": "PASS",
+        "severity_values_found": ["P1", "P2", "P3", "P4"],
+        "category_values_found": ["Billing", "Bug", "Feature", "Account", "Other"],
+        "action_values_found": ["SEND", "HOLD", "ESCALATE"],
+        "invalid_rows": 0
+      },
+      "probability_range_check": {
+        "status": "PASS",
+        "hallucination_risk_range": [0.05, 0.35],
+        "tone_risk_range": [0.02, 0.2],
+        "out_of_range_rows": 0
+      },
+      "duplicate_check": {
+        "status": "PASS",
+        "duplicate_example_ids": 0,
+        "duplicate_rate": 0.0
+      },
+      "missing_values_check": {
+        "status": "PASS",
+        "rows_with_missing_ground_truth": 0
+      },
+      "overall_gate": "PASS",
+      "gate_note": "10-example CI fixture passes all quality checks. Insufficient size for research benchmark — use only for pipeline validation."
+    },
+    {
+      "dataset_id": "ci_fixture_train",
+      "path": "datasets/train/benchmark_fixture.jsonl",
+      "split": "train",
+      "overall_gate": "PASS",
+      "gate_note": "Training fixture passes quality checks. Pipeline validation only."
+    },
+    {
+      "dataset_id": "ci_fixture_validation",
+      "path": "datasets/validation/benchmark_fixture.jsonl",
+      "split": "validation",
+      "overall_gate": "PASS",
+      "gate_note": "Validation fixture passes quality checks. Pipeline validation only."
+    },
+    {
+      "dataset_id": "research_dataset",
+      "path": null,
+      "hash": null,
+      "overall_gate": "BLOCKED",
+      "gate_note": "Research dataset (1000-2000 examples) does not exist. Quality gate cannot be run. Benchmark execution is blocked until this dataset is constructed and passes all quality checks."
+    }
+  ],
+
+  "split_leakage_check": {
+    "status": "PASS",
+    "method": "example_id overlap check across train/validation/test",
+    "train_test_overlap": 0,
+    "validation_test_overlap": 0,
+    "train_validation_overlap": 0,
+    "note": "CI fixture uses distinct example_id prefixes per split"
+  },
+
+  "benchmark_gate_decision": "BLOCKED",
+  "benchmark_gate_reason": "Research dataset not available. Do not run research benchmark against CI fixture — it is insufficient for any research conclusion.",
+
+  "figure_note": "No data quality figures generated — research dataset not available."
+}

@@ -1,0 +1,40 @@
+{
+  "_schema": "jevroute-smoke-status-v1",
+  "_generated": "2026-09-20T00:00:00Z",
+  "_commit": "e480a5b",
+
+  "provider": "jev",
+  "router_version": "jev-adapter-0.1",
+  "schema_version": "1.0",
+  "timestamp": null,
+
+  "smoke_test_status": "BLOCKED",
+  "blocked_reason": "JEV_API_KEY not configured. No .env file present. Cannot initiate real Jev API call.",
+
+  "prerequisites": {
+    "JEV_API_KEY": "MISSING",
+    "JEV_BASE_URL": "MISSING",
+    "JEV_INPUT_PRICE": "optional, defaults to 0.0",
+    "JEV_OUTPUT_PRICE": "optional, defaults to 0.0"
+  },
+
+  "assumed_endpoint": "POST {JEV_BASE_URL}/v1/decide",
+  "endpoint_confirmed": false,
+  "endpoint_note": "OQ-001 unresolved. HttpxJevClient assumes POST /v1/decide. Confirm against actual Jev API documentation before running.",
+
+  "checks_when_smoke_test_runs": [
+    "request_accepted",
+    "response_received",
+    "schema_parsed_to_DecisionResult",
+    "latency_recorded_via_perf_counter",
+    "usage_recorded_if_available",
+    "cost_calculated",
+    "policy_engine_executed",
+    "result_persisted_to_JSONL"
+  ],
+
+  "mock_verification": {
+    "FakeJevClient": "VERIFIED",
+    "note": "FakeJevClient passes all 20 Jev unit tests with no network access. This verifies the adapter boundary, not real Jev behavior."
+  }
+}

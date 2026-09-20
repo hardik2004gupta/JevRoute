@@ -1,0 +1,12 @@
+{
+  "_schema": "jevroute-release-experiment-status-v1",
+  "_date": "2026-09-20",
+  "_commit": "e480a5b",
+  "_empirical_status": "EMPIRICALLY_PARTIAL",
+  "baseline-v1": {"status": "PARTIAL", "execution_mode": "mock", "sample_size": 10, "routers": ["rules", "mock_jev"]},
+  "scaling-v1": {"status": "BLOCKED", "execution_mode": "not_run", "sample_size": null, "routers": []},
+  "fastpath-v1": {"status": "BLOCKED", "execution_mode": "not_run", "sample_size": null, "routers": []},
+  "context-v1": {"status": "BLOCKED", "execution_mode": "not_run", "sample_size": null, "routers": []},
+  "dependency-v1": {"status": "BLOCKED", "execution_mode": "not_run", "sample_size": null, "routers": []},
+  "e2e-v1": {"status": "BLOCKED", "execution_mode": "not_run", "generation_mode": "SIMULATED_ONLY", "sample_size": null, "routers": []}
+}

@@ -3,7 +3,8 @@
 **Version:** 0.1.0 (Benchmark Harness Complete; Research Dataset Pending)  
 **Date:** 2026-09-20  
 **Status:** HARNESS COMPLETE — EMPIRICAL RESULTS PENDING  
-**Commit:** 2747c97 (Phase 3+4) + Phase 5 hardening  
+**Commit:** e480a5b (Phase 5+6 hardening)  
+**Empirical Status:** EMPIRICALLY PARTIAL — all research experiments BLOCKED (see §4)
 
 > **Important:** This report describes the benchmark system design and methodology. Empirical results sections are marked `[PENDING]` where the full 1,000–2,000 example research dataset and real Jev API access have not yet been obtained. No results have been fabricated.
 
@@ -88,12 +89,14 @@ action:            SEND | HOLD | ESCALATE
 
 ### Current Status
 
-| Dataset | Examples | Status | Use |
-|---------|----------|--------|-----|
-| CI fixture (`jevroute_support_v01.jsonl`) | 10 | PRESENT | Pipeline validation only |
-| Research benchmark dataset | 1,000–2,000 | NOT YET AVAILABLE | Required for research conclusions |
+| Dataset | Examples | Hash (SHA-256 prefix) | Status | Use |
+|---------|----------|----------------------|--------|-----|
+| CI fixture (`benchmark_fixture.jsonl`) | 10 | `32d80883d670...` | PRESENT, FROZEN | Pipeline validation only |
+| Research benchmark dataset | 1,000–2,000 | N/A | NOT YET AVAILABLE | Required for research conclusions |
 
 **The 10-example synthetic fixture is sufficient for benchmark pipeline validation. It is not sufficient for any research claim about comparative system quality, cost, or latency.**
+
+**Phase 6 blocker:** No research dataset exists. All empirical benchmark runs are blocked. See `results/RESULT_STATUS.json` and `results/EXPERIMENT_VALIDITY.json`.
 
 ### Final Dataset Requirements (OQ-003, unresolved)
 
@@ -183,6 +186,12 @@ Only meaningful where an end-to-end workload exists. N/A for pure control-plane 
 | JEV | — | [PENDING] | [PENDING] | [PENDING] | [PENDING] |
 
 **Note:** RULES accuracy of 1.0 on 10 synthetic examples is not a research result — these examples were designed to be easily handled by keyword rules. MOCK JEV intentionally introduces synthetic variance to test the evaluation pipeline.
+
+**Sanity check (Phase 6):** Independent calculation from raw JSONL confirmed aggregate metrics are correct. rules accuracy=1.000 reconciled; mock_jev accuracy=0.800 reconciled. Aggregate uses `total_latency_ms` (includes policy engine). No integrity issues found.
+
+**File hashes (immutable raw results):**  
+- `rules.jsonl`: `fdf4f0a78917e6aa02d4e356511a2908830d13bfeb59bf9e4c3d70c607079607`  
+- `mock_jev.jsonl`: `adbd8b66e1ebd8cc325289acb7b71be98c05b082e70adfd31645513f420e3d18`
 
 ---
 
