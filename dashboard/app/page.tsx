@@ -381,16 +381,23 @@ export default function Dashboard() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [lastChecked, setLastChecked] = useState<string>("");
+  const envDemoDefault = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
   const [demoMode, setDemoMode] = useState<boolean>(false);
   const [curveAxis, setCurveAxis] = useState<CurveAxis>("latency");
 
-  // Load demo mode preference from localStorage
+  // Load demo mode preference from localStorage; fall back to env default
   useEffect(() => {
     try {
       const stored = localStorage.getItem("jevroute_demo_mode");
-      if (stored === "true") setDemoMode(true);
-    } catch { /* ignore */ }
-  }, []);
+      if (stored !== null) {
+        setDemoMode(stored === "true");
+      } else if (envDemoDefault) {
+        setDemoMode(true);
+      }
+    } catch {
+      if (envDemoDefault) setDemoMode(true);
+    }
+  }, [envDemoDefault]);
 
   const toggleDemo = () => {
     setDemoMode(prev => {
@@ -1778,6 +1785,31 @@ python -m jevroute.benchmark.runner --config experiments/baseline_research_v1.ya
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
+        {!demoMode && connection === "error" && (
+          <div className="mb-6 rounded-lg border flex items-start gap-3 p-4"
+            style={{ background: "#FEF2F2", borderColor: "#FECACA" }}>
+            <AlertCircle size={16} style={{ color: "#EF4444", flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <p className="text-sm font-medium" style={{ color: "#991B1B" }}>
+                Backend unreachable — no live data available
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: "#B91C1C" }}>
+                Start the API server locally, or switch to{" "}
+                <button
+                  onClick={toggleDemo}
+                  className="underline font-medium"
+                  style={{ color: "#991B1B", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  DEMO mode
+                </button>{" "}
+                to explore pre-computed benchmark estimates.
+              </p>
+              <p className="text-xs mt-1 mono" style={{ color: "#B91C1C" }}>
+                uvicorn jevroute.api.app:app --reload
+              </p>
+            </div>
+          </div>
+        )}
         {tabContent[activeTab]()}
       </main>
 
