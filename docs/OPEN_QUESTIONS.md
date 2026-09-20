@@ -100,6 +100,24 @@ If Jev is per-decision, set both price variables to `0.0` and add a separate `je
 
 ---
 
+## Phase 8 Audit (2026-09-20)
+
+**OQ-001 — Jev API Contract:** UNRESOLVED.
+
+Phase 8 confirmed: no authoritative Jev API documentation is available in the repository or development environment. The `HttpxJevClient` implementation uses a documented assumption (`POST {base_url}/v1/decide`). This assumption must be replaced with a confirmed contract before any research benchmark run involving JevRouter. The adapter boundary is cleanly isolated so only `HttpxJevClient` changes when the real contract is obtained.
+
+**OQ-002 — Jev Pricing:** UNRESOLVED.
+
+Phase 8 confirmed: no official Jev pricing information is available. Cost fields for JevRouter default to `$0.00`. Any benchmark results involving Jev must disclose that cost figures are unconfirmed placeholders.
+
+**OQ-003 — Research Dataset:** NOT AVAILABLE.
+
+Phase 8 confirmed: only the 10-example CI fixture (`datasets/test/benchmark_fixture.jsonl`) exists. No 1,000–2,000 example labeled research dataset has been provided or sourced. Dataset infrastructure (validator, splitter, freeze, quality gate, CLI) is fully implemented and ready to process a legitimate dataset once one is provided.
+
+**OQ-004 and OQ-005:** No change from previous assessment.
+
+**Phase 8 outcome:** All six experiments (baseline-v1, scaling-v1, fastpath-v1, context-v1, dependency-v1, e2e-v1) remain BLOCKED. Repository is at BENCHMARK_READY (pre-empirical) state. Benchmark can execute the moment external inputs are supplied.
+
 ## No Further Ambiguities Identified
 
 The two specification files are broadly consistent. The five items above represent genuine gaps where implementation decisions are required but not fully specified by the current documents.

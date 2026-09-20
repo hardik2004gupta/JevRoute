@@ -1,9 +1,11 @@
 {
   "_schema": "jevroute-result-status-v2",
   "_generated": "2026-09-20T00:00:00Z",
+  "_updated": "2026-09-20T00:00:00Z",
   "_note": "Valid statuses: NOT_RUN | PARTIAL | COMPLETE | BLOCKED | INVALIDATED",
-  "_commit": "e480a5b",
-  "_phase": "6",
+  "_commit": "83dcf47",
+  "_phase": "8",
+  "_phase_note": "Phase 8 external dependency audit complete. All six experiments remain BLOCKED. No .env, no research dataset, no Jev credentials. See Phase 8 audit in blockers section.",
   "_dataset_note": "All current results use the 10-example CI fixture (datasets/test/benchmark_fixture.jsonl). This is NOT the final 1000-2000 example research dataset.",
   "empirical_status": "EMPIRICALLY_PARTIAL",
   "empirical_blockers": [
@@ -12,6 +14,19 @@
     "Real Jev API endpoint not confirmed (OQ-001)",
     "Real Jev pricing not confirmed (OQ-002)"
   ],
+  "phase_8_audit": {
+    "conducted": "2026-09-20",
+    "env_file_present": false,
+    "jev_api_key": "MISSING",
+    "jev_base_url": "MISSING",
+    "llm_api_key": "MISSING",
+    "model_name": "MISSING",
+    "research_dataset": "NOT_AVAILABLE",
+    "jev_api_contract": "UNRESOLVED — documented assumption only; no authoritative Jev API docs in repo or environment",
+    "jev_pricing": "UNRESOLVED — defaults to $0.00/token; no official pricing confirmed",
+    "git_remote": "NONE_CONFIGURED",
+    "conclusion": "All six experiments remain BLOCKED. No external inputs have become available since Phase 7. Repository is correctly at BENCHMARK_READY (pre-empirical) state."
+  },
   "experiments": [
     {
       "experiment_id": "baseline-v1",

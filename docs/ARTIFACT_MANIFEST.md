@@ -50,17 +50,41 @@ Documents every artifact in the repository: its type (source / derived / CI-only
 
 | Path | Content | Status |
 |------|---------|--------|
-| `datasets/test/jevroute_support_v01.jsonl` | 10-example CI fixture | Source, frozen (CI only) |
+| `datasets/test/benchmark_fixture.jsonl` | 10-example CI fixture | Source, frozen (CI only) |
+| `datasets/train/benchmark_fixture.jsonl` | CI fixture train split | Source, CI only |
+| `datasets/validation/benchmark_fixture.jsonl` | CI fixture validation split | Source, CI only |
+| `datasets/manifests/ci_fixture_v0.1.0.json` | CI fixture provenance manifest | Source, Phase 7 |
 
-**Note:** The full 1,000–2,000 example research dataset does not yet exist. See [docs/DATASET.md](DATASET.md).
+**Note:** The full 1,000–2,000 example research dataset does not yet exist. See [docs/DATASET.md](DATASET.md) and OQ-003.
+
+### Dataset Infrastructure (Phase 7)
+
+| Path | Role | Status |
+|------|------|--------|
+| `src/jevroute/datasets/models.py` | SourceType, GroundTruth, DatasetExample, DatasetManifest, FrozenTestManifest, ValidationReport | Source, stable |
+| `src/jevroute/datasets/hasher.py` | SHA-256 hashing for files, record sets, example IDs | Source, stable |
+| `src/jevroute/datasets/validator.py` | Schema/enum/probability/duplicate/leakage validation | Source, stable |
+| `src/jevroute/datasets/splitter.py` | Deterministic 70/15/15 split, seed=42 | Source, stable |
+| `src/jevroute/datasets/freeze.py` | Frozen test manifest creation and verification | Source, stable |
+| `src/jevroute/datasets/quality.py` | Quality report generator (JSON + CSV) | Source, stable |
+| `src/jevroute/datasets/cli.py` | Dataset CLI: validate, inspect, hash, status, quality | Source, stable |
+
+### Provider Readiness Infrastructure (Phase 7)
+
+| Path | Role | Status |
+|------|------|--------|
+| `src/jevroute/readiness/providers.py` | Per-provider readiness checks (Jev, LLM, generation, dataset) | Source, stable |
+| `src/jevroute/readiness/preflight.py` | Benchmark preflight: hard gate before any run | Source, stable |
 
 ### Tests
 
 | Path | Role | Status |
 |------|------|--------|
-| `tests/unit/` | Unit tests — all modules | Source, 108 tests passing |
+| `tests/unit/` | Unit tests — all modules | Source, 157 tests passing |
+| `tests/unit/test_datasets.py` | Dataset models, validator, splitter, freeze, leakage (30 tests) | Source, Phase 7 |
+| `tests/unit/test_readiness.py` | Provider readiness and preflight (17 tests) | Source, Phase 7 |
 | `tests/integration/` | API integration tests | Source, stable |
-| `tests/benchmark/` | End-to-end benchmark pipeline tests | Source, stable |
+| `tests/benchmark/` | End-to-end benchmark pipeline tests (includes num_model_calls regression) | Source, stable |
 | `tests/fixtures/` | Tiny fixtures for CI | Source, CI only |
 
 ---
@@ -102,11 +126,13 @@ Documents every artifact in the repository: its type (source / derived / CI-only
 | `docs/IMPLEMENTATION_MAP.md` | Module map | Reference |
 | `docs/OPEN_QUESTIONS.md` | OQ registry with resolutions | Current |
 | `docs/DATASET.md` | Dataset protocol | Current |
-| `docs/PHASE5_AUDIT.md` | Contract compliance audit | Current (this phase) |
-| `docs/REPRODUCTION.md` | Reproduction guide | Current (this phase) |
-| `docs/ARTIFACT_MANIFEST.md` | This file | Current (this phase) |
-| `results/RESULT_STATUS.json` | Machine-readable experiment status | Current (this phase) |
-| `reports/FINAL_MVP_REPORT.md` | Research report | Current (this phase) |
+| `docs/PHASE5_AUDIT.md` | Contract compliance audit | Current |
+| `docs/REPRODUCTION.md` | Reproduction guide | Current |
+| `docs/ARTIFACT_MANIFEST.md` | This file | Current (Phase 8) |
+| `docs/JEV_API.md` | Jev API contract (with UNKNOWN fields) | Current (Phase 7) |
+| `results/RESULT_STATUS.json` | Machine-readable experiment status | Current (Phase 8) |
+| `results/READINESS.json` | Live-runnable preflight snapshot | Current (Phase 8) |
+| `reports/FINAL_MVP_REPORT.md` | Research report | Current |
 
 ---
 

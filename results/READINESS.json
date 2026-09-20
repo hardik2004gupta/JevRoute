@@ -1,7 +1,8 @@
 {
   "_schema": "jevroute-preflight-v1",
   "_generated": "2026-09-20T00:00:00Z",
-  "_note": "Static snapshot of readiness state as of Phase 7. Run `python -m jevroute.readiness.preflight` with a configured .env for live status.",
+  "_phase_8_audit": "2026-09-20 — Phase 8 external audit confirms: no .env, no Jev credentials, no LLM credentials, no research dataset. All experiments BLOCKED. This file accurately reflects current state.",
+  "_note": "Static snapshot of readiness state. Run `python -m jevroute.readiness.preflight` with a configured .env for live status.",
   "overall": "BLOCKED",
   "dataset": {
     "status": "BLOCKED",
