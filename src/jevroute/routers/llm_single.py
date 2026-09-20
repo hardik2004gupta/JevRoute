@@ -226,6 +226,7 @@ class LLMSingleRouter:
                 "output_tokens": total_output_tokens or None,
                 "estimated_cost_usd": cost,
                 "retry_count": retry_count,
+                "num_model_calls": retry_count + 1,
             })
 
         # All attempts failed — re-raise the last classified error

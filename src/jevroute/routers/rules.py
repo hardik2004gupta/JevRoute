@@ -234,4 +234,5 @@ class RulesRouter:
             input_tokens=None,
             output_tokens=None,
             estimated_cost_usd=0.0,  # Deterministic rules have zero API cost
+            num_model_calls=0,  # No provider API calls
         )

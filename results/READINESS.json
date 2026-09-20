@@ -1,0 +1,64 @@
+{
+  "_schema": "jevroute-preflight-v1",
+  "_generated": "2026-09-20T00:00:00Z",
+  "_note": "Static snapshot of readiness state as of Phase 7. Run `python -m jevroute.readiness.preflight` with a configured .env for live status.",
+  "overall": "BLOCKED",
+  "dataset": {
+    "status": "BLOCKED",
+    "reason": "Research dataset not available (OQ-003). CI fixture (10 examples) is pipeline validation only."
+  },
+  "jev": {
+    "status": "MISSING_CONFIGURATION",
+    "reason": "Missing: JEV_API_KEY, JEV_BASE_URL"
+  },
+  "llm": {
+    "status": "MISSING_CONFIGURATION",
+    "reason": "Missing: LLM_API_KEY, MODEL_NAME"
+  },
+  "generation": {
+    "status": "MISSING_CONFIGURATION",
+    "reason": "Depends on LLM credentials: Missing: LLM_API_KEY, MODEL_NAME"
+  },
+  "policy": {
+    "status": "READY"
+  },
+  "schema": {
+    "status": "READY"
+  },
+  "output_dirs": {
+    "writable": true
+  },
+  "experiments": {
+    "baseline-v1": {
+      "status": "BLOCKED",
+      "reason": "dataset: Research dataset not available (OQ-003).; jev: Missing: JEV_API_KEY, JEV_BASE_URL; llm: Missing: LLM_API_KEY, MODEL_NAME"
+    },
+    "scaling-v1": {
+      "status": "BLOCKED",
+      "reason": "dataset: Research dataset not available (OQ-003).; jev: Missing: JEV_API_KEY, JEV_BASE_URL; llm: Missing: LLM_API_KEY, MODEL_NAME"
+    },
+    "fastpath-v1": {
+      "status": "BLOCKED",
+      "reason": "dataset: Research dataset not available (OQ-003).; jev: Missing: JEV_API_KEY, JEV_BASE_URL; llm: Missing: LLM_API_KEY, MODEL_NAME"
+    },
+    "context-v1": {
+      "status": "BLOCKED",
+      "reason": "dataset: Research dataset not available (OQ-003).; jev: Missing: JEV_API_KEY, JEV_BASE_URL; llm: Missing: LLM_API_KEY, MODEL_NAME"
+    },
+    "dependency-v1": {
+      "status": "BLOCKED",
+      "reason": "dataset: Research dataset not available (OQ-003).; jev: Missing: JEV_API_KEY, JEV_BASE_URL; llm: Missing: LLM_API_KEY, MODEL_NAME"
+    },
+    "e2e-v1": {
+      "status": "BLOCKED",
+      "reason": "dataset: Research dataset not available (OQ-003).; jev: Missing: JEV_API_KEY, JEV_BASE_URL; llm: Missing: LLM_API_KEY, MODEL_NAME"
+    }
+  },
+  "blockers": [
+    "OQ-001: Jev HTTP endpoint and request/response contract not confirmed",
+    "OQ-002: Jev token pricing not confirmed",
+    "OQ-003: Research benchmark dataset (1000-2000 examples) not yet available"
+  ],
+  "errors": [],
+  "warnings": []
+}

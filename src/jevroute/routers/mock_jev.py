@@ -124,4 +124,5 @@ class MockJevRouter:
             input_tokens=None,
             output_tokens=None,
             estimated_cost_usd=None,
+            num_model_calls=1,
         )

@@ -302,4 +302,5 @@ class LLMParallelRouter:
             output_tokens=total_output or None,
             estimated_cost_usd=cost,
             retry_count=total_retries,
+            num_model_calls=NUM_CALLS + total_retries,  # 6 base calls + any retry calls
         )

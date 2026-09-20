@@ -1,0 +1,30 @@
+{
+  "_schema": "jevroute-dataset-manifest-v1",
+  "dataset_name": "JevRoute CI Benchmark Fixture",
+  "dataset_version": "v0.1.0",
+  "created_at": "2026-09-20T00:00:00Z",
+  "source_type": "GENERATED_FOR_TESTING",
+  "source_description": "10-example synthetic fixture for CI pipeline validation. NOT a research benchmark dataset. Must never appear in published benchmark results.",
+  "dataset_hash": "32d80883d67060ffa888c8251a37b972ecff10b08e6b09a65fcd94b482ad21d6",
+  "record_count": 10,
+  "train_count": 7,
+  "validation_count": 2,
+  "test_count": 10,
+  "_note_test_count": "CI fixture is not split; all 10 examples are in datasets/test/",
+  "label_schema_version": "1.0",
+  "privacy_status": "SYNTHETIC",
+  "license_status": "INTERNAL",
+  "split_seed": null,
+  "split_algorithm": null,
+  "generator_version": "phase-1",
+  "generation_seed": null,
+  "generation_config": {
+    "purpose": "CI pipeline validation",
+    "examples": 10,
+    "categories": ["Billing", "Bug", "Feature", "Account", "Other"],
+    "severities": ["P1", "P2", "P3", "P4"]
+  },
+  "test_hash": "32d80883d67060ffa888c8251a37b972ecff10b08e6b09a65fcd94b482ad21d6",
+  "example_ids_hash": "1c39236bcf2aad41c860f35202640633e9260c135f884a350fb652fec92750a8",
+  "notes": "This fixture is for CI only. Do not use for benchmark comparison or publication. Research benchmark requires a separate dataset (see OQ-003)."
+}

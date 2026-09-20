@@ -222,6 +222,7 @@ class BenchmarkRunner:
         total_latency_ms: float | None = None
         input_tokens: int | None = None
         output_tokens: int | None = None
+        num_model_calls: int | None = None
         cost: float | None = None
         schema_valid = False
         retry_count = 0
@@ -234,6 +235,7 @@ class BenchmarkRunner:
 
             input_tokens = result.input_tokens
             output_tokens = result.output_tokens
+            num_model_calls = result.num_model_calls
             cost = result.estimated_cost_usd
             schema_valid = result.schema_valid
             retry_count = result.retry_count
@@ -291,6 +293,7 @@ class BenchmarkRunner:
             total_latency_ms=round(total_latency_ms, 3),
             input_tokens=input_tokens,
             output_tokens=output_tokens,
+            num_model_calls=num_model_calls,
             estimated_cost_usd=cost,
             schema_valid=schema_valid,
             retry_count=retry_count,

@@ -393,3 +393,96 @@ async def test_retry_count_surfaced_in_raw_records(tmp_path):
     assert records[0]["retry_count"] == 1, (
         f"Expected retry_count=1 after one rate-limit retry, got {records[0]['retry_count']}"
     )
+
+
+@pytest.mark.asyncio
+async def test_num_model_calls_rules_router(tmp_path):
+    """Phase 7 regression: RulesRouter must record num_model_calls=0."""
+    cfg = _minimal_config()
+    runner = BenchmarkRunner(
+        config=cfg, results_dir=tmp_path, datasets_dir=DATASETS_DIR, force=True
+    )
+    loader = WorkloadLoader(DATASETS_DIR)
+    examples = loader.load(cfg.experiment.dataset, cfg.experiment.split)
+
+    await runner.run(
+        router=RulesRouter(),
+        router_name=RULES_NAME,
+        router_version=RULES_VERSION,
+        examples=examples,
+    )
+
+    raw_path = tmp_path / "raw" / cfg.experiment.name / f"{RULES_NAME}.jsonl"
+    for line in raw_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        r = json.loads(line)
+        assert r.get("num_model_calls") == 0, (
+            f"RulesRouter must have num_model_calls=0, got {r.get('num_model_calls')}"
+        )
+
+
+@pytest.mark.asyncio
+async def test_num_model_calls_llm_single_no_retry(tmp_path):
+    """Phase 7 regression: LLMSingleRouter with no retry must record num_model_calls=1."""
+    from jevroute.routers.llm_provider import FakeModelClient, ModelResponse
+    from jevroute.routers.llm_single import LLMSingleRouter, ROUTER_NAME, ROUTER_VERSION
+
+    valid_content = (
+        '{"severity":"P2","category":"Billing","policy_violation":false,'
+        '"hallucination_risk":0.05,"tone_risk":0.02,"action":"SEND"}'
+    )
+    client = FakeModelClient(
+        default_response=ModelResponse(content=valid_content, input_tokens=100, output_tokens=30, model="fake")
+    )
+    router = LLMSingleRouter(client=client)
+
+    cfg = _minimal_config()
+    runner = BenchmarkRunner(
+        config=cfg, results_dir=tmp_path, datasets_dir=DATASETS_DIR, force=True
+    )
+    loader = WorkloadLoader(DATASETS_DIR)
+    examples = loader.load(cfg.experiment.dataset, cfg.experiment.split)
+
+    await runner.run(
+        router=router,
+        router_name=ROUTER_NAME,
+        router_version=ROUTER_VERSION,
+        examples=examples,
+    )
+
+    raw_path = tmp_path / "raw" / cfg.experiment.name / f"{ROUTER_NAME}.jsonl"
+    for line in raw_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        r = json.loads(line)
+        assert r.get("num_model_calls") == 1, (
+            f"LLMSingleRouter (no retry) must have num_model_calls=1, got {r.get('num_model_calls')}"
+        )
+
+
+@pytest.mark.asyncio
+async def test_num_model_calls_mock_jev(tmp_path):
+    """Phase 7 regression: MockJevRouter must record num_model_calls=1."""
+    cfg = _minimal_config()
+    runner = BenchmarkRunner(
+        config=cfg, results_dir=tmp_path, datasets_dir=DATASETS_DIR, force=True
+    )
+    loader = WorkloadLoader(DATASETS_DIR)
+    examples = loader.load(cfg.experiment.dataset, cfg.experiment.split)
+
+    await runner.run(
+        router=MockJevRouter(),
+        router_name=MOCK_NAME,
+        router_version=MOCK_VERSION,
+        examples=examples,
+    )
+
+    raw_path = tmp_path / "raw" / cfg.experiment.name / f"{MOCK_NAME}.jsonl"
+    for line in raw_path.read_text().splitlines():
+        if not line.strip():
+            continue
+        r = json.loads(line)
+        assert r.get("num_model_calls") == 1, (
+            f"MockJevRouter must have num_model_calls=1, got {r.get('num_model_calls')}"
+        )

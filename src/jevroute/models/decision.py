@@ -73,3 +73,4 @@ class DecisionResult(BaseModel):
     output_tokens: int | None = Field(None, description="Output tokens consumed (if applicable).")
     estimated_cost_usd: float | None = Field(None, description="Estimated router cost in USD.")
     retry_count: int = Field(0, description="Number of retries before this result was produced (0 = no retries).")
+    num_model_calls: int | None = Field(None, description="Total provider/model API calls made (1 for single-call routers, N+retries for parallel, 0 for rules, None if unknown).")
