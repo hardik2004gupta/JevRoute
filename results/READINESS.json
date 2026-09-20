@@ -1,20 +1,24 @@
 {
   "_schema": "jevroute-preflight-v1",
   "_generated": "2026-09-20T00:00:00Z",
-  "_phase_8_audit": "2026-09-20 — Phase 8 external audit confirms: no .env, no Jev credentials, no LLM credentials, no research dataset. All experiments BLOCKED. This file accurately reflects current state.",
-  "_note": "Static snapshot of readiness state. Run `python -m jevroute.readiness.preflight` with a configured .env for live status.",
+  "_phase_8_audit": "2026-09-20 — Phase 8 external audit confirms: no .env, no Jev credentials, no LLM credentials, no research dataset. All experiments BLOCKED.",
+  "_phase_9_audit": "2026-09-20 — Phase 9: .env created. OPENAI_API_KEY present (length=164) but credit_balance_exhausted (HTTP 429). 500-example synthetic dataset generated, split, frozen. Harness validation (rules-only, 75 examples): PASS. Baseline-v1 remains BLOCKED pending LLM credits.",
+  "_note": "Static snapshot of readiness state. Run `python -m jevroute.readiness.preflight` with a configured .env for live status. See results/PREFLIGHT.json for detailed Phase 9 gate status.",
   "overall": "BLOCKED",
   "dataset": {
-    "status": "BLOCKED",
-    "reason": "Research dataset not available (OQ-003). CI fixture (10 examples) is pipeline validation only."
+    "status": "READY",
+    "reason": "synthetic_support_v1: 500 examples generated, split 70/15/15, test set (75 examples) frozen. Quality gate PASS. Leakage: none.",
+    "frozen_manifest": "datasets/manifests/frozen_test_synthetic_support_v1.json",
+    "source_type": "SYNTHETIC",
+    "limitation": "Synthetic dataset. Results not equivalent to real operational data."
   },
   "jev": {
     "status": "MISSING_CONFIGURATION",
-    "reason": "Missing: JEV_API_KEY, JEV_BASE_URL"
+    "reason": "Missing: JEV_API_KEY, JEV_BASE_URL. OQ-001 and OQ-002 unresolved."
   },
   "llm": {
-    "status": "MISSING_CONFIGURATION",
-    "reason": "Missing: LLM_API_KEY, MODEL_NAME"
+    "status": "BLOCKED",
+    "reason": "OPENAI_API_KEY configured (length=164) but credit_balance_exhausted. HTTP 429 from OpenAI. Add billing credits at https://platform.openai.com/settings/organization/billing/"
   },
   "generation": {
     "status": "MISSING_CONFIGURATION",

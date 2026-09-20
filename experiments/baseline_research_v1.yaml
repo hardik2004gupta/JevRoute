@@ -1,0 +1,51 @@
+experiment:
+  name: baseline-research-v1
+  dataset: synthetic_support_v1
+  split: test
+  concurrency: 8
+  max_examples: 75
+
+decision_schema:
+  version: "1.0"
+
+dataset:
+  source_type: SYNTHETIC
+  version: synthetic_support_v1
+  note: "500-example synthetic labeled dataset. Explicitly labeled as SYNTHETIC. Not real operational data. 75 test examples after 70/15/15 split."
+
+routers:
+  - rules
+  - llm_single
+  - llm_parallel
+  # jev: BLOCKED — JEV_API_KEY not configured (OQ-001 / OQ-002 unresolved)
+
+metrics:
+  latency: true
+  token_usage: true
+  cost: true
+  accuracy: true
+  f1: true
+  calibration: true
+
+retry:
+  max_attempts: 2
+  backoff_ms: 250
+
+llm:
+  model: gpt-4o-mini
+  provider: openai
+  prompt_version: llm-control-v1.0
+  schema_version: "1.0"
+  base_url: https://api.openai.com/v1
+
+pricing_snapshot:
+  llm_model: gpt-4o-mini
+  llm_input_per_1k: 0.00015
+  llm_output_per_1k: 0.00060
+  source: "OpenAI pricing page, 2026-09-20"
+  jev_model: UNKNOWN
+  jev_input_per_1k: 0.0
+  jev_output_per_1k: 0.0
+  jev_pricing_status: UNRESOLVED
+
+validity_note: "PARTIAL — 3 of 4 required routers executed (rules, llm_single, llm_parallel). JevRouter BLOCKED: no JEV_API_KEY. Dataset: SYNTHETIC 500 examples. Results are not a complete four-way comparison."

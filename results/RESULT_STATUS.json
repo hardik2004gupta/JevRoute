@@ -3,16 +3,15 @@
   "_generated": "2026-09-20T00:00:00Z",
   "_updated": "2026-09-20T00:00:00Z",
   "_note": "Valid statuses: NOT_RUN | PARTIAL | COMPLETE | BLOCKED | INVALIDATED",
-  "_commit": "83dcf47",
-  "_phase": "8",
-  "_phase_note": "Phase 8 external dependency audit complete. All six experiments remain BLOCKED. No .env, no research dataset, no Jev credentials. See Phase 8 audit in blockers section.",
-  "_dataset_note": "All current results use the 10-example CI fixture (datasets/test/benchmark_fixture.jsonl). This is NOT the final 1000-2000 example research dataset.",
-  "empirical_status": "EMPIRICALLY_PARTIAL",
+  "_commit": "pending-phase-9",
+  "_phase": "9",
+  "_phase_note": "Phase 9: LLM smoke test executed. OPENAI_API_KEY present (length=164) but account has credit_balance_exhausted. Baseline-v1 BLOCKED. Harness validation (rules-only) PASSED. Dataset infrastructure READY.",
+  "_dataset_note": "Phase 9: 500-example synthetic research dataset generated, split, and frozen. 75 test examples frozen at datasets/manifests/frozen_test_synthetic_support_v1.json.",
+  "empirical_status": "HARNESS_VALIDATED_BENCHMARK_BLOCKED",
   "empirical_blockers": [
-    "No .env file — LLM_API_KEY, MODEL_NAME, JEV_API_KEY, JEV_BASE_URL not configured",
-    "Final research dataset (1000-2000 examples) does not yet exist (OQ-003)",
-    "Real Jev API endpoint not confirmed (OQ-001)",
-    "Real Jev pricing not confirmed (OQ-002)"
+    "OPENAI_API_KEY has credit_balance_exhausted (HTTP 429, code=credit_balance_exhausted). Add billing credits at https://platform.openai.com/settings/organization/billing/",
+    "JEV_API_KEY not configured. OQ-001 (endpoint) and OQ-002 (pricing) unresolved.",
+    "Full 4-router baseline cannot execute until LLM credits are added."
   ],
   "phase_8_audit": {
     "conducted": "2026-09-20",
@@ -145,27 +144,40 @@
       "frozen": true,
       "purpose": "CI validation only — not the research benchmark dataset"
     },
-    "research_dataset": {
-      "path": null,
-      "hash": null,
-      "examples": null,
-      "status": "NOT_YET_AVAILABLE",
-      "frozen": false,
-      "purpose": "1000-2000 example labeled dataset required for research conclusions (OQ-003)"
+    "synthetic_support_v1": {
+      "raw_path": "datasets/raw/synthetic_support_v1.jsonl",
+      "test_path": "datasets/test/synthetic_support_v1.jsonl",
+      "frozen_manifest": "datasets/manifests/frozen_test_synthetic_support_v1.json",
+      "total_examples": 500,
+      "test_examples": 75,
+      "source_type": "SYNTHETIC",
+      "status": "FROZEN_READY",
+      "quality_gate": "PASS",
+      "leakage_detected": false,
+      "test_hash_prefix": "9c6919c5fb883c3a",
+      "freeze_timestamp": "2026-09-20T18:00:45.997532+00:00",
+      "purpose": "Phase 9 synthetic benchmark dataset. Rule-based deterministic labeling. Explicitly SYNTHETIC — not real operational data.",
+      "limitation": "Synthetic dataset. Results are not equivalent to results on real operational data."
     }
   },
   "smoke_tests": {
     "jev": {
       "status": "BLOCKED",
-      "reason": "JEV_API_KEY not configured. No .env file present."
+      "reason": "JEV_API_KEY not configured."
     },
     "llm_single": {
       "status": "BLOCKED",
-      "reason": "LLM_API_KEY + MODEL_NAME not configured. No .env file present."
+      "http_status_observed": 429,
+      "openai_error_code": "credit_balance_exhausted",
+      "reason": "OPENAI_API_KEY present (length=164) but account credit_balance_exhausted. Add billing credits at https://platform.openai.com/settings/organization/billing/"
     },
     "llm_parallel": {
       "status": "BLOCKED",
-      "reason": "LLM_API_KEY + MODEL_NAME not configured. No .env file present."
+      "reason": "Same LLM credential required. Expected same credit_balance_exhausted outcome as llm_single."
+    },
+    "rules": {
+      "status": "VALIDATED",
+      "note": "Rules-only harness validation: 75/75 schema_valid, num_model_calls==0 for all, latency>0 for all. See results/harness_validation_rules_only.json"
     }
   },
   "mock_data_warning": "Results from mock_jev (MockJevRouter) are synthetic and must not be interpreted as Jev system performance. They exist to validate the benchmark pipeline only.",
