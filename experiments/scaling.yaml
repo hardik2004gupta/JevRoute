@@ -1,0 +1,44 @@
+experiment:
+  name: scaling-v1
+  dataset: benchmark_fixture
+  split: test
+  concurrency: 8
+  max_examples: 10
+
+decision_schema:
+  version: "1.0"
+
+# Decision-count tiers: each tier runs all four routers with N decision dimensions.
+# For LLMParallelRouter: N = number of concurrent calls made.
+# For LLMSingleRouter: N = number of fields in structured output prompt.
+# For RulesRouter: N = number of rule groups evaluated (cost always $0).
+# For JevRouter: N = number of decision dimensions submitted.
+scaling:
+  decision_counts: [2, 4, 6, 8, 12]
+  # Dimension subsets for each count (all dims available at count 6+)
+  dimension_map:
+    2:  ["action", "severity"]
+    4:  ["action", "severity", "category", "policy_violation"]
+    6:  ["action", "severity", "category", "policy_violation", "hallucination_risk", "tone_risk"]
+    8:  ["action", "severity", "category", "policy_violation", "hallucination_risk", "tone_risk", "urgency", "complexity"]
+    12: ["action", "severity", "category", "policy_violation", "hallucination_risk", "tone_risk", "urgency", "complexity", "sentiment", "intent", "language", "resolution_effort"]
+
+routers:
+  - rules
+  - mock_jev
+  # Uncomment when credentials configured:
+  # - llm_single
+  # - llm_parallel
+  # - jev
+
+metrics:
+  latency: true
+  token_usage: true
+  cost: true
+  accuracy: true
+  f1: true
+  calibration: true
+
+retry:
+  max_attempts: 2
+  backoff_ms: 250

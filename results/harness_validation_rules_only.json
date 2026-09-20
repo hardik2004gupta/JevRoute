@@ -1,0 +1,33 @@
+{
+  "_label": "HARNESS_VALIDATION_ONLY",
+  "_note": "This is NOT a benchmark result. Rules-only run to confirm harness infrastructure works. LLM and Jev routers BLOCKED.",
+  "phase": "9",
+  "run_date": "2026-09-20",
+  "router": "rules",
+  "dataset_version": "synthetic_support_v1",
+  "split": "test",
+  "example_count": 75,
+  "failures": 0,
+  "schema_valid_count": 75,
+  "severity_accuracy": 0.4267,
+  "action_accuracy": 0.9067,
+  "category_accuracy": 0.68,
+  "severity_distribution": {
+    "P3": 43,
+    "P2": 20,
+    "P4": 8,
+    "P1": 4
+  },
+  "action_distribution": {
+    "SEND": 63,
+    "HOLD": 9,
+    "ESCALATE": 3
+  },
+  "category_distribution": {
+    "Account": 21,
+    "Billing": 18,
+    "Other": 24,
+    "Feature": 8,
+    "Bug": 4
+  }
+}

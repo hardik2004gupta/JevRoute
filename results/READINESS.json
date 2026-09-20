@@ -1,0 +1,69 @@
+{
+  "_schema": "jevroute-preflight-v1",
+  "_generated": "2026-09-20T00:00:00Z",
+  "_phase_8_audit": "2026-09-20 — Phase 8 external audit confirms: no .env, no Jev credentials, no LLM credentials, no research dataset. All experiments BLOCKED.",
+  "_phase_9_audit": "2026-09-20 — Phase 9: .env created. OPENAI_API_KEY present (length=164) but credit_balance_exhausted (HTTP 429). 500-example synthetic dataset generated, split, frozen. Harness validation (rules-only, 75 examples): PASS. Baseline-v1 remains BLOCKED pending LLM credits.",
+  "_note": "Static snapshot of readiness state. Run `python -m jevroute.readiness.preflight` with a configured .env for live status. See results/PREFLIGHT.json for detailed Phase 9 gate status.",
+  "overall": "BLOCKED",
+  "dataset": {
+    "status": "READY",
+    "reason": "synthetic_support_v1: 500 examples generated, split 70/15/15, test set (75 examples) frozen. Quality gate PASS. Leakage: none.",
+    "frozen_manifest": "datasets/manifests/frozen_test_synthetic_support_v1.json",
+    "source_type": "SYNTHETIC",
+    "limitation": "Synthetic dataset. Results not equivalent to real operational data."
+  },
+  "jev": {
+    "status": "MISSING_CONFIGURATION",
+    "reason": "Missing: JEV_API_KEY, JEV_BASE_URL. OQ-001 and OQ-002 unresolved."
+  },
+  "llm": {
+    "status": "BLOCKED",
+    "reason": "OPENAI_API_KEY configured (length=164) but credit_balance_exhausted. HTTP 429 from OpenAI. Add billing credits at https://platform.openai.com/settings/organization/billing/"
+  },
+  "generation": {
+    "status": "MISSING_CONFIGURATION",
+    "reason": "Depends on LLM credentials: Missing: LLM_API_KEY, MODEL_NAME"
+  },
+  "policy": {
+    "status": "READY"
+  },
+  "schema": {
+    "status": "READY"
+  },
+  "output_dirs": {
+    "writable": true
+  },
+  "experiments": {
+    "baseline-v1": {
+      "status": "BLOCKED",
+      "reason": "dataset: Research dataset not available (OQ-003).; jev: Missing: JEV_API_KEY, JEV_BASE_URL; llm: Missing: LLM_API_KEY, MODEL_NAME"
+    },
+    "scaling-v1": {
+      "status": "BLOCKED",
+      "reason": "dataset: Research dataset not available (OQ-003).; jev: Missing: JEV_API_KEY, JEV_BASE_URL; llm: Missing: LLM_API_KEY, MODEL_NAME"
+    },
+    "fastpath-v1": {
+      "status": "BLOCKED",
+      "reason": "dataset: Research dataset not available (OQ-003).; jev: Missing: JEV_API_KEY, JEV_BASE_URL; llm: Missing: LLM_API_KEY, MODEL_NAME"
+    },
+    "context-v1": {
+      "status": "BLOCKED",
+      "reason": "dataset: Research dataset not available (OQ-003).; jev: Missing: JEV_API_KEY, JEV_BASE_URL; llm: Missing: LLM_API_KEY, MODEL_NAME"
+    },
+    "dependency-v1": {
+      "status": "BLOCKED",
+      "reason": "dataset: Research dataset not available (OQ-003).; jev: Missing: JEV_API_KEY, JEV_BASE_URL; llm: Missing: LLM_API_KEY, MODEL_NAME"
+    },
+    "e2e-v1": {
+      "status": "BLOCKED",
+      "reason": "dataset: Research dataset not available (OQ-003).; jev: Missing: JEV_API_KEY, JEV_BASE_URL; llm: Missing: LLM_API_KEY, MODEL_NAME"
+    }
+  },
+  "blockers": [
+    "OQ-001: Jev HTTP endpoint and request/response contract not confirmed",
+    "OQ-002: Jev token pricing not confirmed",
+    "OQ-003: Research benchmark dataset (1000-2000 examples) not yet available"
+  ],
+  "errors": [],
+  "warnings": []
+}

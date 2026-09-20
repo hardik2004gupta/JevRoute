@@ -1,0 +1,105 @@
+{
+  "_description": "Hard preflight gate for JevRoute benchmark execution. All components must be READY before baseline-v1 can execute.",
+  "_generated": "2026-09-20",
+  "_phase": "9",
+  "_schema_version": "1.0",
+
+  "preflight_status": "BLOCKED",
+  "preflight_gate": "FAIL",
+
+  "components": {
+    "jev_provider": {
+      "status": "BLOCKED",
+      "reason": "JEV_API_KEY not configured. OQ-001 (endpoint) and OQ-002 (pricing) unresolved.",
+      "code": "MISSING_CREDENTIAL",
+      "required_for": ["jev"]
+    },
+    "llm_provider": {
+      "status": "BLOCKED",
+      "reason": "OPENAI_API_KEY is configured (length=164) but account has credit_balance_exhausted. HTTP 429 returned for all LLM requests.",
+      "code": "credit_balance_exhausted",
+      "api_key_present": true,
+      "api_key_length": 164,
+      "model": "gpt-4o-mini",
+      "base_url": "https://api.openai.com/v1",
+      "http_status_observed": 429,
+      "openai_error_code": "credit_balance_exhausted",
+      "openai_error_message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "resolution": "Add billing credits at https://platform.openai.com/settings/organization/billing/",
+      "required_for": ["llm_single", "llm_parallel"]
+    },
+    "rules_provider": {
+      "status": "READY",
+      "reason": "Rules router requires no external API. Deterministic execution available.",
+      "required_for": ["rules"]
+    },
+    "dataset": {
+      "status": "READY",
+      "dataset_version": "synthetic_support_v1",
+      "split": "test",
+      "example_count": 75,
+      "manifest_path": "datasets/manifests/frozen_test_synthetic_support_v1.json",
+      "test_hash_prefix": "9c6919c5fb883c3a",
+      "freeze_timestamp": "2026-09-20T18:00:45.997532+00:00",
+      "quality_gate": "PASS",
+      "leakage_detected": false
+    },
+    "policy_engine": {
+      "status": "READY",
+      "reason": "PolicyEngine is router-independent, no external dependency."
+    },
+    "output_dirs": {
+      "status": "READY",
+      "paths": ["results/runs/", "results/aggregates/"]
+    }
+  },
+
+  "smoke_tests": {
+    "llm_single": {
+      "status": "BLOCKED",
+      "result": "HTTP 429 credit_balance_exhausted",
+      "executed": true,
+      "passed": false
+    },
+    "llm_parallel": {
+      "status": "NOT_ATTEMPTED",
+      "reason": "LLMSingleRouter smoke test failed — LLMParallelRouter uses same credentials, same outcome expected."
+    },
+    "rules": {
+      "status": "READY",
+      "reason": "Not smoke-tested (no external dependency). Deterministic execution confirmed by unit tests."
+    },
+    "jev": {
+      "status": "BLOCKED",
+      "reason": "No JEV_API_KEY configured."
+    }
+  },
+
+  "experiment_readiness": {
+    "baseline-research-v1": {
+      "status": "BLOCKED",
+      "reason": "Requires llm_single + llm_parallel, both BLOCKED (credit_balance_exhausted). Jev also BLOCKED. Only rules router is executable.",
+      "executable_routers": ["rules"],
+      "blocked_routers": ["llm_single", "llm_parallel", "jev"],
+      "note": "A rules-only run is not a valid baseline benchmark. It is a harness validation at most."
+    }
+  },
+
+  "unblock_actions": [
+    {
+      "id": "UA-001",
+      "priority": "HIGH",
+      "description": "Add OpenAI API credits",
+      "url": "https://platform.openai.com/settings/organization/billing/",
+      "unlocks": ["llm_single", "llm_parallel"],
+      "estimated_cost": "~$0.04-0.08 USD for 75-example baseline run with gpt-4o-mini"
+    },
+    {
+      "id": "UA-002",
+      "priority": "MEDIUM",
+      "description": "Obtain JEV_API_KEY and resolve OQ-001 (endpoint), OQ-002 (pricing)",
+      "unlocks": ["jev"],
+      "status": "external_dependency"
+    }
+  ]
+}

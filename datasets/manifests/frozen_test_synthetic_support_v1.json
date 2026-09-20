@@ -1,0 +1,8 @@
+{
+  "dataset_version": "synthetic_support_v1",
+  "test_hash": "9c6919c5fb883c3a9aad7b5e1e84a4e356dde08b22a7285170faf45f4fe665c0",
+  "example_count": 75,
+  "example_ids_hash": "48121ffcb09557b4240053b95825ada04cc9b79177d83d6a3c680778b1370986",
+  "freeze_timestamp": "2026-09-20T18:00:45.997532+00:00",
+  "frozen_by": "phase-9-dataset-construction"
+}

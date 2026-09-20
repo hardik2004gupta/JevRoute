@@ -1,0 +1,45 @@
+experiment:
+  name: fastpath-v1
+  dataset: benchmark_fixture
+  split: test
+  concurrency: 8
+  max_examples: 10
+
+decision_schema:
+  version: "1.0"
+
+# Fast-path experiment: compare "Always Jev" vs "Fast Gate + Jev"
+# The fast gate is deterministic — no semantic inference.
+# Gate latency is measured and reported separately from Jev latency.
+fast_path:
+  conditions:
+    - id: always_jev
+      description: "Every request goes directly to Jev (no gate)"
+      gate_enabled: false
+
+    - id: gate_plus_jev
+      description: "Deterministic fast gate; only ambiguous requests reach Jev"
+      gate_enabled: true
+      gate_rules:
+        - type: exact_match
+          description: "Bypass if ticket_subject exactly matches a known template"
+        - type: empty_request
+          description: "Bypass empty or minimal requests"
+        - type: explicit_action
+          description: "Bypass if customer tier + product combination maps to a fixed policy"
+
+routers:
+  - mock_jev
+  # - jev (when credentials configured)
+
+metrics:
+  latency: true
+  token_usage: true
+  cost: true
+  accuracy: true
+  f1: true
+  calibration: false
+
+retry:
+  max_attempts: 2
+  backoff_ms: 250
