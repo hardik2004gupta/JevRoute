@@ -41,3 +41,8 @@ class ErrorResponse(BaseModel):
     error: str
     detail: str | None = None
     code: str | None = None
+
+
+class BenchmarkStatusResponse(BaseModel):
+    experiments: list[dict]
+    results_available: bool

@@ -38,9 +38,10 @@ class Settings(BaseSettings):
     # Policy
     hallucination_threshold: float = 0.8
 
-    # Provider credentials — optional, not required for Phase 1 mock path
+    # Provider credentials — optional, not required for mock/rules-only runs
     jev_api_key: str | None = None
     llm_api_key: str | None = None
+    llm_base_url: str = "https://api.openai.com/v1"
     model_name: str | None = None
     model_input_price: float | None = None
     model_output_price: float | None = None

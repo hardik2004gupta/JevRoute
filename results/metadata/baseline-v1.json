@@ -1,0 +1,94 @@
+{
+  "runs": [
+    {
+      "run_id": "baseline-v1__rules__20260920T101257Z",
+      "router": "rules",
+      "router_version": "rules-v1",
+      "prompt_version": null,
+      "decision_schema_version": "1.0",
+      "policy_version": "support-policy-1.0",
+      "num_examples": 10,
+      "total_wall_clock_s": 0.001,
+      "timestamp": "2026-09-20T10:12:57.106086+00:00",
+      "experiment_config": {
+        "experiment": {
+          "name": "baseline-v1",
+          "dataset": "benchmark_fixture",
+          "split": "test",
+          "concurrency": 8,
+          "max_examples": 10
+        },
+        "decision_schema": {
+          "version": "1.0"
+        },
+        "routers": [
+          "rules",
+          "mock_jev"
+        ],
+        "metrics": {
+          "latency": true,
+          "token_usage": true,
+          "cost": true,
+          "accuracy": true,
+          "f1": true,
+          "calibration": true
+        },
+        "retry": {
+          "max_attempts": 2,
+          "backoff_ms": 250
+        },
+        "extra": {}
+      },
+      "environment": {
+        "python_version": "3.14.7",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "git_sha": "ac7e0c4"
+      }
+    },
+    {
+      "run_id": "baseline-v1__mock_jev__20260920T101257Z",
+      "router": "mock_jev",
+      "router_version": "mock-0.1.0",
+      "prompt_version": null,
+      "decision_schema_version": "1.0",
+      "policy_version": "support-policy-1.0",
+      "num_examples": 10,
+      "total_wall_clock_s": 0.002,
+      "timestamp": "2026-09-20T10:12:57.329720+00:00",
+      "experiment_config": {
+        "experiment": {
+          "name": "baseline-v1",
+          "dataset": "benchmark_fixture",
+          "split": "test",
+          "concurrency": 8,
+          "max_examples": 10
+        },
+        "decision_schema": {
+          "version": "1.0"
+        },
+        "routers": [
+          "rules",
+          "mock_jev"
+        ],
+        "metrics": {
+          "latency": true,
+          "token_usage": true,
+          "cost": true,
+          "accuracy": true,
+          "f1": true,
+          "calibration": true
+        },
+        "retry": {
+          "max_attempts": 2,
+          "backoff_ms": 250
+        },
+        "extra": {}
+      },
+      "environment": {
+        "python_version": "3.14.7",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "git_sha": "ac7e0c4"
+      }
+    }
+  ]
+}

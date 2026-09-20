@@ -1,4 +1,4 @@
-"""JevRoute FastAPI application — Phase 1 mock-router shell."""
+"""JevRoute FastAPI application — Phase 2 benchmark-aware shell."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 
 from jevroute.api.logging_config import configure_logging, get_logger
 from jevroute.api.models import (
+    BenchmarkStatusResponse,
     DecideRequest,
     DecisionResponse,
     ErrorResponse,
@@ -98,6 +99,30 @@ async def status() -> StatusResponse:
         policy_version=settings.policy_version,
         active_router="mock_jev",
         benchmark_results_available=False,
+    )
+
+
+@app.get("/api/v1/benchmarks", response_model=BenchmarkStatusResponse, tags=["benchmarks"])
+async def benchmarks_status() -> BenchmarkStatusResponse:
+    """Return available benchmark experiment status."""
+    import json
+    from pathlib import Path
+    results_dir = Path("results")
+    experiments: list[dict] = []
+    meta_dir = results_dir / "metadata"
+    if meta_dir.exists():
+        for meta_file in sorted(meta_dir.glob("*.json")):
+            try:
+                data = json.loads(meta_file.read_text())
+                experiments.append({
+                    "experiment_id": meta_file.stem,
+                    "runs": len(data.get("runs", [])),
+                })
+            except Exception:
+                pass
+    return BenchmarkStatusResponse(
+        experiments=experiments,
+        results_available=len(experiments) > 0,
     )
 
 

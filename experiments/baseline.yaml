@@ -1,0 +1,28 @@
+experiment:
+  name: baseline-v1
+  dataset: benchmark_fixture
+  split: test
+  concurrency: 8
+  max_examples: 10
+
+decision_schema:
+  version: "1.0"
+
+routers:
+  - rules
+  - mock_jev
+  # Uncomment when LLM credentials are configured:
+  # - llm_single
+  # - llm_parallel
+
+metrics:
+  latency: true
+  token_usage: true
+  cost: true
+  accuracy: true
+  f1: true
+  calibration: true
+
+retry:
+  max_attempts: 2
+  backoff_ms: 250
