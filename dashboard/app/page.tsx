@@ -8,8 +8,10 @@ import {
 } from "lucide-react";
 import {
   DEMO_ROUTERS, COST_CURVE_POINTS, DEMO_DATASET, DEMO_EXPERIMENT,
-  FASTPATH_DEMO, E2E_DEMO, type DemoRouter, type Provenance,
+  FASTPATH_DEMO, E2E_DEMO, type DemoRouter, type DemoDataStatus,
 } from "./demo/benchmarkDemoData";
+
+type Provenance = DemoDataStatus;
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -89,10 +91,16 @@ const ROUTER_DISPLAY: Record<string, string> = {
 
 // ── Provenance system ─────────────────────────────────────────────────────────
 
+// Demo data status config (benchmark visualization layer)
 const PROVENANCE_CONFIG: Record<Provenance, { label: string; color: string; symbol: string; bg: string }> = {
   MEASURED:  { label: "MEASURED",  color: "#22C55E", symbol: "●", bg: "#F0FDF4" },
-  ESTIMATED: { label: "ESTIMATED", color: "#F59E0B", symbol: "◌", bg: "#FFFBEB" },
-  BLOCKED:   { label: "BLOCKED",   color: "#EF4444", symbol: "△", bg: "#FEF2F2" },
+  PROJECTED: { label: "PROJECTED", color: "#F59E0B", symbol: "◌", bg: "#FFFBEB" },
+};
+
+// Live provider status config (separate from demo data status)
+const PROVIDER_STATUS_CONFIG = {
+  AVAILABLE:   { label: "AVAILABLE",   color: "#22C55E", symbol: "●", bg: "#F0FDF4" },
+  UNAVAILABLE: { label: "UNAVAILABLE", color: "#EF4444", symbol: "△", bg: "#FEF2F2" },
 };
 
 function ProvenanceBadge({ p, note }: { p: Provenance; note?: string }) {
@@ -107,23 +115,42 @@ function ProvenanceBadge({ p, note }: { p: Provenance; note?: string }) {
   );
 }
 
+function ProviderStatusBadge({ status, reason }: { status: "AVAILABLE" | "UNAVAILABLE"; reason?: string }) {
+  const cfg = PROVIDER_STATUS_CONFIG[status];
+  return (
+    <span
+      className="mono text-[9px] font-semibold px-1.5 py-0.5 rounded border cursor-default"
+      style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.color + "40" }}
+      title={reason ?? cfg.label}>
+      {cfg.symbol} {cfg.label}
+    </span>
+  );
+}
+
 // ── Demo Banner ───────────────────────────────────────────────────────────────
 
 function DemoBanner() {
   return (
-    <div className="w-full px-6 py-2.5 flex items-center justify-between gap-4 flex-wrap"
+    <div className="w-full px-6 py-3 flex items-start justify-between gap-4 flex-wrap"
       style={{ background: "#FFF8F5", borderBottom: "1px solid #F5C4B0" }}>
-      <div className="flex items-center gap-2">
-        <span className="mono text-[10px] font-bold px-2 py-0.5 rounded"
-          style={{ background: "#E85B35", color: "#fff" }}>DEMO VERSION</span>
-        <span className="mono text-[11px]" style={{ color: "#92400E" }}>
-          Based on actual executed empirical values locally
-        </span>
+      <div>
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="mono text-[10px] font-bold px-2 py-0.5 rounded"
+            style={{ background: "#E85B35", color: "#fff" }}>DEMO VERSION</span>
+          <span className="mono text-[11px]" style={{ color: "#92400E" }}>
+            Based on actual executed empirical values locally
+          </span>
+        </div>
+        <p className="mono text-[10px]" style={{ color: "#B45309" }}>
+          Measured local values are combined with deterministic projections for currently unavailable providers.
+        </p>
       </div>
-      <span className="mono text-[10px]" style={{ color: "#B45309" }}>
-        <ProvenanceBadge p="MEASURED" /> = locally executed harness · {" "}
-        <ProvenanceBadge p="ESTIMATED" /> = deterministic projection · {" "}
-        <ProvenanceBadge p="BLOCKED" /> = provider unavailable
+      <span className="mono text-[10px] flex items-center gap-2 flex-wrap" style={{ color: "#B45309" }}>
+        <ProvenanceBadge p="MEASURED" /> = locally executed ·{" "}
+        <ProvenanceBadge p="PROJECTED" /> = deterministic demo projection ·{" "}
+        <span className="mono text-[9px] font-semibold px-1.5 py-0.5 rounded border"
+          style={{ color: "#EF4444", background: "#FEF2F2", borderColor: "#EF444440" }}>△ UNAVAILABLE</span>{" "}
+        = live provider currently unavailable
       </span>
     </div>
   );
@@ -444,7 +471,7 @@ export default function Dashboard() {
     return () => clearInterval(t);
   }, [fetchAll]);
 
-  const completedCount = demoMode ? 1 : experiments.filter(e => e.status === "COMPLETE").length;
+  const completedCount = demoMode ? ALL_EXPERIMENTS.length : experiments.filter(e => e.status === "COMPLETE").length;
   const totalDecisions = demoMode
     ? DEMO_ROUTERS.reduce((s, r) => s + r.correct_decisions, 0)
     : baselineMetrics.reduce((sum, r) => sum + (r.decisions ?? 0), 0);
@@ -472,17 +499,17 @@ export default function Dashboard() {
         </section>
 
         <section>
-          <SectionLabel>System Overview — Demo Projection</SectionLabel>
+          <SectionLabel>Demo Coverage</SectionLabel>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               {
-                label: "Experiments Run", value: `1 / ${ALL_EXPERIMENTS.length}`,
-                sub: "rules harness validated",
-                provenance: "MEASURED" as Provenance,
+                label: "Demo Experiments", value: `${ALL_EXPERIMENTS.length} / ${ALL_EXPERIMENTS.length}`,
+                sub: "all 6 experiments visualized",
+                provenance: "PROJECTED" as Provenance,
               },
               {
-                label: "Test Examples", value: "75",
-                sub: "frozen test set · synthetic_support_v1",
+                label: "Measured (Local)", value: "1",
+                sub: "RulesRouter harness validated · 75 examples",
                 provenance: "MEASURED" as Provenance,
               },
               {
@@ -491,9 +518,9 @@ export default function Dashboard() {
                 provenance: "MEASURED" as Provenance,
               },
               {
-                label: "Est. Cost / 1K (Jev)", value: fmtCost(DEMO_ROUTERS.find(r => r.id === "jev")!.cost_per_1k_usd),
-                sub: "demo pricing — not verified",
-                provenance: "ESTIMATED" as Provenance,
+                label: "Live Providers", value: "0 / 3",
+                sub: "OpenAI · Jev API — currently unavailable",
+                provenance: "PROJECTED" as Provenance,
               },
             ].map(({ label, value, sub, provenance }) => (
               <Card key={label}>
@@ -509,17 +536,17 @@ export default function Dashboard() {
         </section>
 
         <section>
-          <SectionLabel>Experiment Status (Demo)</SectionLabel>
+          <SectionLabel>Experiment Visualization (Demo)</SectionLabel>
           <Card>
             <div className="space-y-0">
               {ALL_EXPERIMENTS.map(({ id, label, icon: Icon }, i) => {
-                const isRules = id === "baseline-v1";
-                const state = isRules ? "COMPLETE" : "NOT_RUN";
+                const isBaseline = id === "baseline-v1";
                 return (
                   <div key={id} className="flex items-center justify-between py-3"
                     style={{ borderBottom: i < ALL_EXPERIMENTS.length - 1 ? "1px solid var(--border)" : "none" }}>
                     <div className="flex items-center gap-3">
-                      <StatusDot state={state} />
+                      <span className="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0"
+                        style={{ background: "#F59E0B" }} />
                       <Icon size={13} style={{ color: "var(--text-muted)" }} />
                       <div>
                         <p className="mono text-xs font-medium" style={{ color: "var(--text-primary)" }}>{id}</p>
@@ -527,35 +554,77 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {isRules && <ProvenanceBadge p="MEASURED" note="RulesRouter harness validation — 75 examples" />}
-                      {!isRules && <ProvenanceBadge p="BLOCKED" note="Provider credentials unavailable" />}
+                      {isBaseline && (
+                        <span className="mono text-[9px]" style={{ color: "var(--text-muted)" }}>
+                          Rules: <span style={{ color: "#22C55E" }}>● MEASURED</span>
+                        </span>
+                      )}
+                      <ProvenanceBadge p="PROJECTED"
+                        note={isBaseline
+                          ? "Rules measured locally. LLM/Jev are demo projections. Full empirical benchmark pending."
+                          : "Demo projection — not empirically executed."} />
                       <span className="mono text-[10px] px-2 py-0.5 rounded"
-                        style={{ background: "var(--surface-alt)", color: statusColor(state), border: "1px solid var(--border)" }}>
-                        {isRules ? "VALIDATED" : "BLOCKED"}
+                        style={{ background: "#FFFBEB", color: "#B45309", border: "1px solid #FDE68A" }}>
+                        PROJECTED DEMO
                       </span>
                     </div>
                   </div>
                 );
               })}
             </div>
+            <p className="mono text-[10px] mt-3 pt-3" style={{ color: "var(--text-muted)", borderTop: "1px solid var(--border)" }}>
+              EMPIRICAL STATUS — Full four-way provider benchmark pending external execution.
+              Demo visualizes a populated research instrument; it does not claim empirical completion.
+            </p>
           </Card>
         </section>
 
         <section>
-          <SectionLabel>Provider Status</SectionLabel>
+          <SectionLabel>Live Provider Status</SectionLabel>
           <Card>
+            <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
+              The demo contains projections for all providers. Live execution requires external credentials.
+            </p>
             <div className="space-y-3">
               {[
-                { label: "Rules (deterministic)", status: "AVAILABLE", note: "Harness validated — 75/75 schema valid" },
-                { label: "OpenAI gpt-4o-mini", status: "BLOCKED", note: "credit_balance_exhausted · HTTP 429" },
-                { label: "Jev API", status: "BLOCKED", note: "JEV_API_KEY not configured · OQ-001 / OQ-002 unresolved" },
-              ].map(({ label, status, note }) => (
-                <div key={label} className="flex items-center justify-between gap-4">
+                {
+                  label: "Rules (deterministic)",
+                  demoStatus: "MEASURED" as Provenance,
+                  demoNote: "Harness validated — 75/75 schema valid",
+                  liveStatus: "AVAILABLE" as "AVAILABLE" | "UNAVAILABLE",
+                  liveNote: "No external credentials required",
+                },
+                {
+                  label: "OpenAI gpt-4o-mini",
+                  demoStatus: "PROJECTED" as Provenance,
+                  demoNote: "Demo projection from token model",
+                  liveStatus: "UNAVAILABLE" as "AVAILABLE" | "UNAVAILABLE",
+                  liveNote: "credit_balance_exhausted · HTTP 429",
+                },
+                {
+                  label: "Jev API",
+                  demoStatus: "PROJECTED" as Provenance,
+                  demoNote: "Demo projection — unverified pricing",
+                  liveStatus: "UNAVAILABLE" as "AVAILABLE" | "UNAVAILABLE",
+                  liveNote: "JEV_API_KEY not configured · OQ-001 / OQ-002 unresolved",
+                },
+              ].map(({ label, demoStatus, demoNote, liveStatus, liveNote }) => (
+                <div key={label} className="flex items-start justify-between gap-4 py-2"
+                  style={{ borderBottom: "1px solid var(--border)" }}>
                   <div>
                     <p className="mono text-xs font-medium" style={{ color: "var(--text-primary)" }}>{label}</p>
-                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>{note}</p>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>{liveNote}</p>
                   </div>
-                  <ProvenanceBadge p={status === "AVAILABLE" ? "MEASURED" : "BLOCKED"} />
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1">
+                      <span className="mono text-[9px]" style={{ color: "var(--text-muted)" }}>demo:</span>
+                      <ProvenanceBadge p={demoStatus} note={demoNote} />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="mono text-[9px]" style={{ color: "var(--text-muted)" }}>live:</span>
+                      <ProviderStatusBadge status={liveStatus} reason={liveNote} />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -592,8 +661,7 @@ export default function Dashboard() {
             </div>
             <div className="flex gap-2 flex-wrap items-center">
               <ProvenanceBadge p="MEASURED" note="Locally executed harness validation" />
-              <ProvenanceBadge p="ESTIMATED" note="Deterministic projection from benchmark config" />
-              <ProvenanceBadge p="BLOCKED" note="Provider unavailable" />
+              <ProvenanceBadge p="PROJECTED" note="Deterministic demo projection — not empirically executed" />
             </div>
           </div>
         </div>
@@ -601,7 +669,7 @@ export default function Dashboard() {
         <Card>
           <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Latency Comparison (p95)</p>
-            <MetaChip>ESTIMATED — providers blocked</MetaChip>
+            <MetaChip>PROJECTED — live providers unavailable</MetaChip>
           </div>
           <LatencyBarChart routers={DEMO_ROUTERS} />
         </Card>
@@ -643,7 +711,7 @@ export default function Dashboard() {
             </table>
           </div>
           <p className="text-xs mt-4" style={{ color: "var(--text-muted)" }}>
-            Rules values are MEASURED from local harness validation. LLM/Jev values are ESTIMATED projections.
+            Rules values are MEASURED from local harness validation. LLM/Jev values are PROJECTED demo estimates.
             These are not empirical benchmark results. No providers were unblocked to produce these numbers.
           </p>
         </Card>
@@ -678,7 +746,7 @@ export default function Dashboard() {
             </p>
             <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
               Scaling projection for 2 → 4 → 6 → 8 → 12 decisions per request.{" "}
-              <ProvenanceBadge p="ESTIMATED" note="scaling-v1 experiment not yet executed" />
+              <ProvenanceBadge p="PROJECTED" note="scaling-v1 experiment not yet executed — demo projection" />
             </p>
           </div>
           <div className="flex gap-1">
@@ -734,7 +802,7 @@ export default function Dashboard() {
             </table>
           </div>
           <p className="text-xs mt-3" style={{ color: "var(--text-muted)" }}>
-            All values ESTIMATED. scaling-v1 experiment not yet executed. Provider blocked.
+            All values PROJECTED. scaling-v1 experiment not yet executed. Live providers unavailable.
           </p>
         </Card>
       </div>
@@ -753,7 +821,7 @@ export default function Dashboard() {
             Latency share = control-plane latency / end-to-end latency.
           </p>
           <p className="text-xs mt-1 flex items-center gap-2" style={{ color: "var(--text-muted)" }}>
-            <ProvenanceBadge p="ESTIMATED" note="e2e-v1 not executed; generation provider BLOCKED" />
+            <ProvenanceBadge p="PROJECTED" note="e2e-v1 not executed; generation provider unavailable" />
             Generation cost: assumed ${genCost.toFixed(4)}/request (GPT-4o generation — not measured)
           </p>
         </div>
@@ -765,7 +833,7 @@ export default function Dashboard() {
               <Card key={sys.id}>
                 <div className="flex items-center justify-between mb-2">
                   <p className="mono text-[10px] uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{r.label}</p>
-                  <ProvenanceBadge p="ESTIMATED" />
+                  <ProvenanceBadge p="PROJECTED" />
                 </div>
                 <p className="mono text-xl font-medium" style={{ color: "var(--text-primary)" }}>
                   {(sys.tax_pct * 100).toFixed(1)}%
@@ -783,13 +851,13 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>End-to-End Breakdown</p>
             <div className="flex items-center gap-2">
-              <ProvenanceBadge p="BLOCKED" note="Generation provider not configured" />
-              <MetaChip>e2e-v1: BLOCKED</MetaChip>
+              <ProviderStatusBadge status="UNAVAILABLE" reason="Generation provider not configured" />
+              <MetaChip>e2e-v1: PROJECTED DEMO</MetaChip>
             </div>
           </div>
           <p className="text-xs mb-4" style={{ color: "var(--status-err)" }}>
-            ⚠ Generation provider not configured. e2e-v1 experiment not yet executed.
-            These projections use an assumed generation cost and must not be presented as real end-to-end economics.
+            ⚠ Generation provider unavailable. e2e-v1 experiment not yet executed.
+            These are demo projections using an assumed generation cost — not empirical end-to-end economics.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
@@ -845,7 +913,7 @@ export default function Dashboard() {
                     <p className="mono text-xs" style={{ color: "var(--text-muted)" }}>p50 {latency}ms</p>
                   </>
                 )}
-                <ProvenanceBadge p="ESTIMATED" />
+                <ProvenanceBadge p="PROJECTED" />
               </div>
             ))}
           </div>
@@ -906,7 +974,7 @@ export default function Dashboard() {
             </table>
           </div>
           <p className="text-xs mt-4" style={{ color: "var(--text-muted)" }}>
-            Rules values MEASURED from harness validation. LLM/Jev values ESTIMATED from benchmark config.
+            Rules values MEASURED from harness validation. LLM/Jev values are PROJECTED demo estimates.
             Failures remain in results — none are dropped.
           </p>
         </Card>
@@ -963,18 +1031,28 @@ export default function Dashboard() {
         </Card>
         <Card>
           <div className="flex items-center gap-2 mb-2">
-            <AlertCircle size={14} style={{ color: "var(--status-warn)" }} />
-            <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Blocked Runs</p>
+            <Info size={14} style={{ color: "var(--text-muted)" }} />
+            <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Live Provider Status</p>
           </div>
           <p className="text-xs mb-3" style={{ color: "var(--text-secondary)" }}>
-            The following runs cannot execute until external credentials are provided:
+            The demo contains projections for these systems. Live execution requires external credentials.
           </p>
           <div className="space-y-2">
-            {["LLM SINGLE", "LLM PARALLEL", "JEV"].map(router => (
-              <div key={router} className="flex items-center justify-between py-2 px-3 rounded"
+            {[
+              { label: "LLM SINGLE",   reason: "credit_balance_exhausted · HTTP 429" },
+              { label: "LLM PARALLEL", reason: "credit_balance_exhausted · HTTP 429" },
+              { label: "JEV",          reason: "JEV_API_KEY not configured · OQ-001 / OQ-002 unresolved" },
+            ].map(({ label, reason }) => (
+              <div key={label} className="flex items-center justify-between py-2 px-3 rounded"
                 style={{ background: "var(--surface-alt)", border: "1px solid var(--border)" }}>
-                <span className="mono text-xs" style={{ color: "var(--text-secondary)" }}>{router}</span>
-                <ProvenanceBadge p="BLOCKED" note="Provider credentials unavailable" />
+                <div>
+                  <span className="mono text-xs" style={{ color: "var(--text-secondary)" }}>{label}</span>
+                  <p className="text-[10px] mt-0.5" style={{ color: "var(--text-muted)" }}>{reason}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <ProvenanceBadge p="PROJECTED" note="Demo projection" />
+                  <ProviderStatusBadge status="UNAVAILABLE" reason={reason} />
+                </div>
               </div>
             ))}
           </div>
@@ -1821,7 +1899,7 @@ python -m jevroute.benchmark.runner --config experiments/baseline_research_v1.ya
           </p>
           <p className="mono text-[11px]" style={{ color: "var(--text-muted)" }}>
             {demoMode
-              ? "DEMO MODE — Rules: MEASURED · LLM/Jev: ESTIMATED projections only · No empirical results fabricated"
+              ? "DEMO MODE — Rules: MEASURED · LLM/Jev: PROJECTED demo estimates · No empirical results fabricated"
               : "No benchmark data has been fabricated. All metrics sourced from measured results."}
           </p>
         </div>

@@ -1,25 +1,35 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // JevRoute Demo Mode — Central Demo Data Source
 //
-// PROVENANCE KEY
-//   MEASURED  — locally executed harness validation data (real observations)
-//   ESTIMATED — deterministic projection derived from harness + benchmark config
-//   BLOCKED   — provider currently unavailable; value not yet observable
+// DEMO DATA STATUS (presentation layer):
+//   MEASURED   — locally executed harness validation data (real observations)
+//   PROJECTED  — deterministic projection for demonstration (not empirically executed)
+//
+// LIVE PROVIDER STATUS (separate concept):
+//   AVAILABLE  — provider reachable and configured
+//   UNAVAILABLE — provider unreachable or credentials absent
 //
 // !! This file must NEVER be written into canonical benchmark result artifacts.
-// !! All estimated values are projections for interface demonstration ONLY.
+// !! All PROJECTED values are constructed for interface demonstration ONLY.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type Provenance = "MEASURED" | "ESTIMATED" | "BLOCKED";
+// Demo data status — what the demo visualization shows
+export type DemoDataStatus = "MEASURED" | "PROJECTED";
+
+// Live provider status — separate from demo data status
+export type LiveProviderStatus = "AVAILABLE" | "UNAVAILABLE";
+
+// Legacy alias kept for any remaining page.tsx ProvenanceBadge calls
+export type Provenance = DemoDataStatus;
 
 export interface DemoRouter {
   id: string;
   label: string;
   version: string;
-  provenance: Provenance;
+  provenance: DemoDataStatus;
   provenanceNote: string;
   // Quality
-  accuracy: number;        // primary: action accuracy (most operationally critical)
+  accuracy: number;
   macro_f1: number;
   severity_accuracy: number;
   action_accuracy: number;
@@ -50,9 +60,9 @@ export interface DemoRouter {
   retry_rate: number;
   // Throughput
   throughput_per_s: number;
-  // Provider
-  provider_status: "AVAILABLE" | "BLOCKED";
-  provider_block_reason?: string;
+  // Live provider (separate from demo data status)
+  live_provider_status: LiveProviderStatus;
+  live_provider_block_reason?: string;
 }
 
 export interface CostCurvePoint {
@@ -72,45 +82,40 @@ export interface CostCurvePoint {
 }
 
 // ─── Pricing snapshot (from .env / experiments/baseline_research_v1.yaml) ────
-// gpt-4o-mini pricing as of 2026-09-20
-const INPUT_PER_TOKEN  = 0.00015 / 1000;   // $0.00015 / 1K input tokens
-const OUTPUT_PER_TOKEN = 0.00060 / 1000;   // $0.00060 / 1K output tokens
+const INPUT_PER_TOKEN  = 0.00015 / 1000;
+const OUTPUT_PER_TOKEN = 0.00060 / 1000;
 
-// Jev: assumed demo pricing — NOT VERIFIED JEV PRICING
 const JEV_INPUT_DEMO_PER_TOKEN  = 0.00005 / 1000;
 const JEV_OUTPUT_DEMO_PER_TOKEN = 0.00020 / 1000;
 const JEV_PRICING_NOTE =
   "DEMO PRICING — assumed $0.00005/1K input · $0.00020/1K output. NOT verified Jev pricing.";
 
-// Frozen test set size (measured)
 const N = 75;
 
 // ─── LLM Single token estimates ───────────────────────────────────────────────
-const LS_IN  = 420;  // structured-output prompt + state context
-const LS_OUT = 105;  // JSON decision object
+const LS_IN  = 420;
+const LS_OUT = 105;
 const LS_COST_PER = LS_IN * INPUT_PER_TOKEN + LS_OUT * OUTPUT_PER_TOKEN;
 const LS_ACC = 0.91;
-const LS_CORRECT = Math.round(LS_ACC * N);               // 68
+const LS_CORRECT = Math.round(LS_ACC * N);
 
-// ─── LLM Parallel token estimates (6 concurrent calls) ───────────────────────
-const LP_IN  = 910;  // 6 parallel single-dimension prompts
-const LP_OUT = 252;  // 6 compact JSON outputs
+// ─── LLM Parallel token estimates ─────────────────────────────────────────────
+const LP_IN  = 910;
+const LP_OUT = 252;
 const LP_COST_PER = LP_IN * INPUT_PER_TOKEN + LP_OUT * OUTPUT_PER_TOKEN;
 const LP_ACC = 0.92;
-const LP_CORRECT = Math.round(LP_ACC * N);               // 69
+const LP_CORRECT = Math.round(LP_ACC * N);
 
 // ─── Jev token estimates ──────────────────────────────────────────────────────
-const JV_IN  = 125;  // compact structured decision input
-const JV_OUT = 38;   // compact structured decision output
+const JV_IN  = 125;
+const JV_OUT = 38;
 const JV_COST_PER = JV_IN * JEV_INPUT_DEMO_PER_TOKEN + JV_OUT * JEV_OUTPUT_DEMO_PER_TOKEN;
 const JV_ACC = 0.944;
-const JV_CORRECT = Math.round(JV_ACC * N);               // 71
+const JV_CORRECT = Math.round(JV_ACC * N);
 
 // ─── Rules (MEASURED from harness validation 2026-09-20) ─────────────────────
-// Locally executed: 75 / 75 schema-valid, num_model_calls = 0
-// accuracy = action_accuracy (primary operational metric) = 90.7%
 const RU_ACC = 0.907;
-const RU_CORRECT = Math.round(RU_ACC * N);               // 68
+const RU_CORRECT = Math.round(RU_ACC * N);
 
 export const DEMO_ROUTERS: DemoRouter[] = [
   {
@@ -151,15 +156,15 @@ export const DEMO_ROUTERS: DemoRouter[] = [
     retry_rate:            0.000,
     throughput_per_s:      380,
 
-    provider_status: "AVAILABLE",
+    live_provider_status: "AVAILABLE",
   },
   {
     id:             "llm_single",
     label:          "LLM SINGLE",
     version:        "llm-single-v1 / gpt-4o-mini",
-    provenance:     "ESTIMATED",
-    provenanceNote: "Phase 9 demo projection. Derived from gpt-4o-mini token model + benchmark config. " +
-                    "Provider BLOCKED (credit_balance_exhausted). NOT empirically measured.",
+    provenance:     "PROJECTED",
+    provenanceNote: "Demo projection. Derived from gpt-4o-mini token model + benchmark config. " +
+                    "Live provider UNAVAILABLE (credit_balance_exhausted). NOT empirically measured.",
 
     accuracy:           LS_ACC,
     macro_f1:           0.893,
@@ -191,16 +196,16 @@ export const DEMO_ROUTERS: DemoRouter[] = [
     retry_rate:            0.027,
     throughput_per_s:      17,
 
-    provider_status:       "BLOCKED",
-    provider_block_reason: "credit_balance_exhausted",
+    live_provider_status:       "UNAVAILABLE",
+    live_provider_block_reason: "credit_balance_exhausted · HTTP 429",
   },
   {
     id:             "llm_parallel",
     label:          "LLM PARALLEL",
     version:        "llm-parallel-v1 / gpt-4o-mini",
-    provenance:     "ESTIMATED",
-    provenanceNote: "Phase 9 demo projection. 6 concurrent async LLM calls. Parallel wall-clock latency " +
-                    "lower than LLM Single despite higher aggregate token cost. Provider BLOCKED (credit_balance_exhausted).",
+    provenance:     "PROJECTED",
+    provenanceNote: "Demo projection. 6 concurrent async LLM calls. Parallel wall-clock latency " +
+                    "lower than LLM Single despite higher aggregate token cost. Live provider UNAVAILABLE (credit_balance_exhausted).",
 
     accuracy:           LP_ACC,
     macro_f1:           0.912,
@@ -232,16 +237,16 @@ export const DEMO_ROUTERS: DemoRouter[] = [
     retry_rate:            0.040,
     throughput_per_s:      14,
 
-    provider_status:       "BLOCKED",
-    provider_block_reason: "credit_balance_exhausted",
+    live_provider_status:       "UNAVAILABLE",
+    live_provider_block_reason: "credit_balance_exhausted · HTTP 429",
   },
   {
     id:             "jev",
     label:          "JEV",
     version:        "jev-adapter-0.1",
-    provenance:     "ESTIMATED",
-    provenanceNote: "Phase 9 demo projection. System-One decision primitive. " +
-                    JEV_PRICING_NOTE + " Provider BLOCKED (no JEV_API_KEY, OQ-001/OQ-002 unresolved).",
+    provenance:     "PROJECTED",
+    provenanceNote: "Demo projection. System-One decision primitive. " +
+                    JEV_PRICING_NOTE + " Live provider UNAVAILABLE (no JEV_API_KEY, OQ-001/OQ-002 unresolved).",
     jev_pricing_note: JEV_PRICING_NOTE,
 
     accuracy:           JV_ACC,
@@ -274,21 +279,18 @@ export const DEMO_ROUTERS: DemoRouter[] = [
     retry_rate:            0.008,
     throughput_per_s:      85,
 
-    provider_status:       "BLOCKED",
-    provider_block_reason: "no JEV_API_KEY · OQ-001 / OQ-002 unresolved",
+    live_provider_status:       "UNAVAILABLE",
+    live_provider_block_reason: "JEV_API_KEY not configured · OQ-001 / OQ-002 unresolved",
   },
 ];
 
-// ─── Intelligence Cost Curve (decision-count scaling projection) ──────────────
-// ESTIMATED — scaling-v1 experiment not yet executed
-// LLM Single: sequential → latency scales linearly with N
-// LLM Parallel: parallel execution → latency ≈ constant + small N overhead
-// Jev: compact decision primitive → sub-linear latency growth
+// ─── Intelligence Cost Curve ───────────────────────────────────────────────────
+// PROJECTED — scaling-v1 not yet executed
 export const COST_CURVE_POINTS: CostCurvePoint[] = [2, 4, 6, 8, 12].map((n) => ({
   decisions:                n,
   rules_latency_ms:         n * 2.4,
   llm_single_latency_ms:    n * 420,
-  llm_parallel_latency_ms:  220 + n * 12,   // parallel: ~constant wall-clock
+  llm_parallel_latency_ms:  220 + n * 12,
   jev_latency_ms:           n * 38,
   rules_cost_usd:           0,
   llm_single_cost_usd:      n * LS_COST_PER,
@@ -300,11 +302,11 @@ export const COST_CURVE_POINTS: CostCurvePoint[] = [2, 4, 6, 8, 12].map((n) => (
   jev_tokens:               n * (JV_IN + JV_OUT),
 }));
 
-// ─── Dataset facts (MEASURED — actual dataset metadata) ──────────────────────
+// ─── Dataset facts (MEASURED) ─────────────────────────────────────────────────
 export const DEMO_DATASET = {
   name:                 "synthetic_support_v1",
   source_type:          "SYNTHETIC",
-  provenance:           "MEASURED" as Provenance,
+  provenance:           "MEASURED" as DemoDataStatus,
   total_examples:       500,
   train_examples:       350,
   validation_examples:  75,
@@ -314,14 +316,13 @@ export const DEMO_DATASET = {
   frozen_manifest:      "datasets/manifests/frozen_test_synthetic_support_v1.json",
   test_hash_prefix:     "9c6919c5fb883c3a",
   freeze_timestamp:     "2026-09-20T18:00:45.997532+00:00",
-  // From harness validation output (MEASURED):
   severity_dist:  { P3: 43, P2: 20, P4: 8, P1: 4 },
   action_dist:    { SEND: 63, HOLD: 9, ESCALATE: 3 },
   category_dist:  { Account: 21, Billing: 18, Other: 24, Feature: 8, Bug: 4 },
   limitation:     "Synthetic dataset. Results are not equivalent to results on real operational data.",
 };
 
-// ─── Experiment config (from experiments/baseline_research_v1.yaml) ───────────
+// ─── Experiment config ────────────────────────────────────────────────────────
 export const DEMO_EXPERIMENT = {
   id:             "baseline-research-v1",
   dataset:        "synthetic_support_v1",
@@ -335,37 +336,33 @@ export const DEMO_EXPERIMENT = {
   decision_schema_version: "1.0",
   code_sha:       "b17ad97",
   timestamp:      "2026-09-20T18:00:00Z",
-  validity_note:  "PARTIAL — 3 of 4 required routers projected (rules, llm_single, llm_parallel). " +
-                  "JevRouter BLOCKED. Dataset: SYNTHETIC 500 examples.",
+  validity_note:  "PARTIAL — RulesRouter locally measured. LLM/Jev are demo projections. " +
+                  "Live providers currently unavailable. Full empirical benchmark pending.",
 };
 
-// ─── Fastpath demo projection ─────────────────────────────────────────────────
-// ESTIMATED — fastpath-v1 experiment not yet executed
+// ─── Fastpath demo projection (PROJECTED) ─────────────────────────────────────
 export const FASTPATH_DEMO = {
-  provenance: "ESTIMATED" as Provenance,
+  provenance: "PROJECTED" as DemoDataStatus,
   always_jev: {
     calls_per_1k: 1000,
     latency_p50_ms: 35,
     cost_per_1k_usd: JV_COST_PER * 1000,
   },
   fast_gate_plus_jev: {
-    // ~30% trivial cases routed past Jev entirely (rules handle them)
     bypass_rate: 0.30,
     calls_per_1k: 700,
-    latency_p50_ms: 28,   // blended: 30% × 2ms + 70% × 35ms = 25ms ≈ 28ms (with overhead)
+    latency_p50_ms: 28,
     cost_per_1k_usd: JV_COST_PER * 700,
     quality_delta: +0.003,
   },
 };
 
-// ─── E2E projection (generation provider also blocked) ───────────────────────
-// ESTIMATED + BLOCKED — e2e-v1 experiment not yet executed; generation provider unavailable
+// ─── E2E projection (PROJECTED — live providers unavailable) ──────────────────
 export const E2E_DEMO = {
-  provenance: "ESTIMATED" as Provenance,
-  generation_blocked: true,
-  generation_block_reason: "Generation provider not configured. e2e-v1 experiment not yet executed.",
-  // Assumed generation cost context (for illustration only)
-  assumed_generation_cost_per_request_usd: 0.0030,  // assumed GPT-4o generation
+  provenance: "PROJECTED" as DemoDataStatus,
+  generation_unavailable: true,
+  generation_unavailable_reason: "Generation provider not configured. e2e-v1 experiment not yet executed.",
+  assumed_generation_cost_per_request_usd: 0.0030,
   assumed_generation_latency_ms: 1200,
   systems: [
     { id: "rules",        control_cost: 0,           gen_cost: 0.0030, total_cost: 0.0030,  control_latency: 2,   gen_latency: 1200, total_latency: 1202, tax_pct: 0.00 },
